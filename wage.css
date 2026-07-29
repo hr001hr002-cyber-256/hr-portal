@@ -1,0 +1,7 @@
+.wage-head,.wage-row{grid-template-columns:1.1fr 1fr .85fr .85fr .85fr 1fr 1fr 40px}
+.net-wage{background:#edf4f1!important;color:#21483d!important;font-weight:700}
+@media(max-width:760px){.wage-row{grid-template-columns:1fr 1fr}.wage-row input:first-child{grid-column:1/-1}}
+.paper{width:210mm;min-height:297mm;margin:auto;padding:15mm!important;color:#111;font-family:"Microsoft JhengHei",sans-serif}
+.paper .doc-title{text-align:center;font-size:24px;letter-spacing:.18em;margin:0 0 16px}.paper .doc-subtitle{text-align:center;font-size:19px;margin:0 0 14px}.paper .doc-table{width:100%;border-collapse:collapse}.paper .doc-table th,.paper .doc-table td{border:1px solid #222;padding:7px 8px;vertical-align:middle}.paper .doc-table th{background:#f3f3f3;text-align:center}.paper .doc-note{font-size:12px;line-height:1.45}.paper .company-block{margin-top:24px;line-height:2}.paper .signature-line{display:flex;justify-content:space-between;gap:30px;margin-top:28px}.paper .checkboxes{white-space:pre-line;line-height:1.8}.paper .wage-detail th,.paper .wage-detail td{text-align:center;font-size:12px;padding:5px}.paper .right{text-align:right!important}
+@media(max-width:760px){dialog{width:100vw}.paper{width:210mm;transform-origin:top left}}
+@page{size:A4;margin:0}

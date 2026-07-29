@@ -1,0 +1,11 @@
+.paper .paired-form{table-layout:fixed}
+.paper .paired-form col.label{width:18%}
+.paper .paired-form col.value{width:32%}
+.paper .paired-form th,.paper .paired-form td{height:38px}
+.paper .section-row th{background:#dfe9e5!important;color:#173f34;text-align:left!important;font-size:16px;padding:7px 10px!important}
+.paper .amount-box{font-size:20px;font-weight:700;text-align:right!important}
+.paper .approval-table{table-layout:fixed;margin-top:18px}
+.paper .approval-table th{width:20%;background:#edf2f0}
+.paper .approval-table td{height:68px}
+.paper .formula-box{margin:16px 0;padding:12px;border:1px solid #49675e;background:#f3f7f5;line-height:1.8}
+.paper .notice-statement{margin:14px 0;padding:11px 13px;border:1px solid #8b9792;background:#f7f8f8;font-size:13px;line-height:1.75;text-align:justify}

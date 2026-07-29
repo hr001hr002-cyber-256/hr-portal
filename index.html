@@ -2,78 +2,61 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="SOBER HR Portal 公司公告與薪資調整文件入口">
-  <title>SOBER HR Portal</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="SOBER 資遣費即時計算與文件產生工具">
+  <title>SOBER 資遣費計算工具</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="wage.css">
+  <link rel="stylesheet" href="doc-layout.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="shell header-inner">
-      <a class="brand" href="index.html" aria-label="回首頁">
-        <span class="brand-mark">S</span>
-        <span><strong>SOBER HR Portal</strong><small>人力資源入口網站</small></span>
-      </a>
-      <div class="today" id="today" aria-label="今天日期"></div>
-    </div>
-  </header>
-
+  <header><div class="shell brand"><b>SOBER HR Tools</b><span>資料只在本頁即時計算，不會儲存或上傳</span></div></header>
   <main class="shell">
-    <section class="hero">
-      <p class="eyebrow">INTERNAL RESOURCE CENTER</p>
-      <h1>需要的制度與文件，<br><span>在這裡快速找到。</span></h1>
-      <form class="search-box" id="homeSearch" role="search">
-        <label class="sr-only" for="homeQuery">搜尋公告</label>
-        <input id="homeQuery" type="search" placeholder="搜尋公告字號、主旨或關鍵字…" autocomplete="off">
-        <button type="submit">搜尋</button>
-      </form>
-      <p class="search-hint">例如：請假、獎金、公務車、SB115023</p>
-    </section>
+    <section class="hero"><p>SEVERANCE WORKSPACE</p><h1>資遣費計算與文件產生器</h1><span>填一次資料，即時計算預告期、平均工資與資遣費，並套用公司資料產生文件。</span></section>
+    <form id="severanceForm">
+      <section class="card"><h2><i>01</i> 公司與工作地</h2><div class="grid">
+        <label class="wide">公司名稱<select name="companyKey" required><option value="">請選擇公司</option><option value="sobo">搜博科技股份有限公司</option><option value="soshow">搜秀網路行銷有限公司</option><option value="socreative">搜創網路行銷有限公司</option><option value="ideas">創思影像有限公司</option><option value="maya">馬雅科技有限公司</option></select></label>
+        <label>統一編號<input name="companyId" readonly></label><label>負責人<input name="representative" readonly></label>
+        <label>公司電話<input name="companyPhone" readonly></label><label>保險證字號<input name="insuranceNo" readonly></label>
+        <label class="wide">公司登記／投保單位地址<input name="companyAddress" readonly></label>
+        <label>實際工作地<select name="workplaceRegion" required><option value="">請選擇</option><option value="taipei">台北</option><option value="taichung">台中</option><option value="kaohsiung">高雄</option><option value="tainan">台南</option></select></label>
+        <label>實際工作地址<input name="workplace" readonly></label>
+      </div><p class="hint">離職證明單使用「實際工作地址」；非自願離職證明的投保單位地址使用所選公司的登記地址。</p></section>
 
-    <section class="overview" aria-labelledby="overviewTitle">
-      <div class="section-heading">
-        <div><p class="eyebrow">OVERVIEW</p><h2 id="overviewTitle">本月概況</h2></div>
-        <p id="dataStatus">正在讀取資料…</p>
-      </div>
-      <div class="stat-grid">
-        <a class="stat-card" href="announcements.html?period=month">
-          <span class="card-number">01</span><span class="card-icon">公</span>
-          <h3>最新公告</h3>
-          <p class="stat-value" id="announcementMonth">—</p>
-          <small id="announcementUpdated">最後更新：—</small>
-          <span class="card-link">開啟公告 <b>→</b></span>
-        </a>
-        <a class="stat-card" href="salary.html?period=month">
-          <span class="card-number">02</span><span class="card-icon">薪</span>
-          <h3>薪資調整</h3>
-          <p class="stat-value" id="salaryMonth">—</p>
-          <small id="salaryUpdated">最後更新：—</small>
-          <span class="card-link">開啟文件 <b>→</b></span>
-        </a>
-        <a class="stat-card stat-card-dark" href="announcements.html">
-          <span class="card-number">03</span><span class="card-icon">總</span>
-          <h3>公告總數</h3>
-          <p class="stat-value" id="announcementTotal">—</p>
-          <small>完整歷史公告資料</small>
-          <span class="card-link">查看全部 <b>→</b></span>
-        </a>
-      </div>
-    </section>
+      <section class="card"><h2><i>02</i> 員工基本資料</h2><div class="grid">
+        <label>姓名<input name="employeeName" required></label><label>身分證字號<input name="employeeId" required></label>
+        <label>出生日期<input name="birthDate" type="date"></label><label>性別<select name="gender"><option value="male">男</option><option value="female">女</option></select></label>
+        <label>聯絡電話<input name="employeePhone"></label><label>部門<input name="department"></label>
+        <label>職稱<input name="jobTitle" required></label>
+        <label class="wide">通訊地址<input name="employeeAddress"></label>
+      </div></section>
 
-    <section class="content-grid">
-      <div class="panel">
-        <div class="panel-heading"><div><p class="eyebrow">RECENT</p><h2>近期公告</h2></div><a href="announcements.html">查看全部 →</a></div>
-        <div id="recentAnnouncements" class="recent-list"><p class="empty">正在讀取公告…</p></div>
-      </div>
-      <aside class="panel categories-panel">
-        <p class="eyebrow">CATEGORIES</p><h2>公告分類</h2>
-        <div id="categoryLinks" class="category-links"></div>
-      </aside>
+      <section class="card"><h2><i>03</i> 終止契約資料</h2><div class="grid">
+        <label>到職日<input name="startDate" type="date" required></label><label>最後工作日／離職日<input name="endDate" type="date" required></label>
+        <label class="wide">法源依據<select name="legalBasis" required><option value="">請選擇</option><option>勞動基準法第11條第1款－歇業或轉讓</option><option>勞動基準法第11條第2款－虧損或業務緊縮</option><option>勞動基準法第11條第3款－不可抗力暫停工作逾一個月</option><option>勞動基準法第11條第4款－業務性質變更，有減少勞工必要</option><option>勞動基準法第11條第5款－勞工對所擔任工作確不能勝任</option><option>勞動基準法第13條但書</option><option>勞動基準法第20條－事業單位改組或轉讓</option><option>勞動基準法第14條－勞工不經預告終止契約</option><option value="other">其他（請在理由說明）</option></select></label>
+        <label class="wide">資遣理由／事實說明<textarea name="reasonDetail" rows="3" required></textarea></label>
+        <label>實際通知日（沒有可留白）<input name="actualNoticeDate" type="date"></label><label>薪資／資遣費發放日<input name="settlementDate" type="date"></label>
+        <label>退休金制度<select name="pensionSystem"><option value="new">全部新制</option><option value="old">全部舊制</option><option value="mixed">新舊制並存</option></select></label><label id="transitionField" hidden>轉換新制日期<input name="transitionDate" type="date" value="2005-07-01"></label>
+      </div><p class="warning">本工具協助試算與套版，不會判斷個案資遣是否合法；特殊保護身分、排除期間及爭議工資項目請另行確認。</p></section>
+
+      <section class="card"><h2><i>04</i> 平均工資資料</h2><p class="hint">每月應領工資＝原工資－未足月扣款－事假扣款－遲到扣款－其他排除工資。未足月與事假一律以原工資÷30計算；遲到扣款以原工資÷30÷8÷60×遲到分鐘數計算。未足月天數、事假天數及遲到分鐘輸入值與各項扣款小數均無條件捨去。</p>
+        <div class="wage-head"><span>年／月</span><span>原工資</span><span>未足月天數</span><span>事假天數</span><span>遲到分鐘</span><span>其他排除</span><span>應領工資</span><span></span></div><div id="wageRows"></div>
+        <div class="row-actions"><button type="button" class="ghost" id="addWageRow">＋新增一列</button><button type="button" class="ghost" id="fillSixMonths">建立最近六個月</button></div>
+        <div class="grid"><label>最近一個月正常工資（選填）<input name="lastMonthlySalary" type="number" min="0"></label><label>月平均工資覆核值（選填）<input name="averageWageOverride" type="number" min="0" step="0.01"></label></div>
+      </section>
+      <div class="actions"><button class="primary" type="submit">開始計算</button><button class="ghost" type="reset">清除資料</button><span id="formMessage"></span></div>
+    </form>
+
+    <section id="results" class="card results" hidden><h2>計算結果</h2><div class="metrics">
+      <article><small>法定預告天數</small><strong id="noticeDays">0 天</strong><p id="noticeDetail"></p></article>
+      <article><small>最晚預告日</small><strong id="latestNotice">—</strong><p>以離職日前一日開始逆算。</p></article>
+      <article><small>月平均工資</small><strong id="averageMonthly">NT$0</strong><p id="averageDetail"></p></article>
+      <article class="accent"><small>資遣費</small><strong id="severancePay">NT$0</strong><p id="severanceDetail"></p></article>
+    </div><div id="calculationSheet" class="details"></div>
+      <div class="documents"><div><h2>PDF 文件產生器</h2><p>依公司表單套入資料，再列印或另存為 PDF。</p></div><div><button data-doc="notice">產生資遣通知書 PDF</button><button data-doc="average">產生平均工資明細 PDF</button><button data-doc="service">產生離職證明 PDF</button><button data-doc="involuntary">產生非自願離職證明 PDF</button></div></div>
     </section>
   </main>
-
-  <footer><div class="shell"><span>SOBER HR Portal</span><span>內部文件查詢入口</span></div></footer>
-  <script src="js/common.js"></script>
-  <script src="js/home.js"></script>
-</body>
-</html>
+  <dialog id="documentDialog"><div class="dialogbar"><b id="dialogTitle"></b><div><button id="printDocument">列印／另存 PDF</button><button id="closeDialog">關閉</button></div></div><div id="documentPreview" class="paper"></div></dialog>
+  <footer>試算結果僅供作業輔助；正式文件請由承辦人覆核。</footer>
+  <script src="vendor/jszip.min.js"></script><script src="app.js"></script>
+</body></html>
