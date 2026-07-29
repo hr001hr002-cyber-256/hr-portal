@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>薪資調整｜SOBER HR Portal</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+  <header class="site-header"><div class="shell header-inner"><a class="brand" href="index.html"><span class="brand-mark">S</span><span><strong>SOBER HR Portal</strong><small>人力資源入口網站</small></span></a><a class="back-link" href="index.html">← 回首頁</a></div></header>
+  <main class="shell page-main">
+    <section class="page-title"><p class="eyebrow">SALARY ADJUSTMENTS</p><h1>薪資調整文件</h1><p>查看本月新增與過往薪資調整文件。</p></section>
+    <section class="month-summary"><span>本月狀態</span><strong id="salarySummary">—</strong><small id="salaryLastUpdated">最後更新：—</small></section>
+    <section class="filter-panel"><label for="salaryQuery">搜尋文件</label><div class="inline-search"><input id="salaryQuery" type="search" placeholder="搜尋姓名、日期或文件名稱…"><button id="clearSalarySearch" type="button">清除</button></div><div class="period-tabs" role="group" aria-label="期間篩選"><button data-period="month" class="active">本月新增</button><button data-period="all">歷史資料</button></div></section>
+    <div class="results-heading"><h2 id="salaryResultsTitle">本月新增</h2><span id="salaryCount">0 件</span></div>
+    <div id="salaryResults" class="document-list"><p class="empty">正在讀取文件…</p></div>
+  </main>
+  <footer><div class="shell"><span>SOBER HR Portal</span><span>薪資調整文件</span></div></footer>
+  <script src="js/common.js"></script><script src="js/salary.js"></script>
+</body></html>

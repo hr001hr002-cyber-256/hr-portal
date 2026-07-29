@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SOBER HR Portal 公司公告與薪資調整文件入口">
+  <title>SOBER HR Portal</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="index.html" aria-label="回首頁">
+        <span class="brand-mark">S</span>
+        <span><strong>SOBER HR Portal</strong><small>人力資源入口網站</small></span>
+      </a>
+      <div class="today" id="today" aria-label="今天日期"></div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">INTERNAL RESOURCE CENTER</p>
+      <h1>需要的制度與文件，<br><span>在這裡快速找到。</span></h1>
+      <form class="search-box" id="homeSearch" role="search">
+        <label class="sr-only" for="homeQuery">搜尋公告</label>
+        <input id="homeQuery" type="search" placeholder="搜尋公告字號、主旨或關鍵字…" autocomplete="off">
+        <button type="submit">搜尋</button>
+      </form>
+      <p class="search-hint">例如：請假、獎金、公務車、SB115023</p>
+    </section>
+
+    <section class="overview" aria-labelledby="overviewTitle">
+      <div class="section-heading">
+        <div><p class="eyebrow">OVERVIEW</p><h2 id="overviewTitle">本月概況</h2></div>
+        <p id="dataStatus">正在讀取資料…</p>
+      </div>
+      <div class="stat-grid">
+        <a class="stat-card" href="announcements.html?period=month">
+          <span class="card-number">01</span><span class="card-icon">公</span>
+          <h3>最新公告</h3>
+          <p class="stat-value" id="announcementMonth">—</p>
+          <small id="announcementUpdated">最後更新：—</small>
+          <span class="card-link">開啟公告 <b>→</b></span>
+        </a>
+        <a class="stat-card" href="salary.html?period=month">
+          <span class="card-number">02</span><span class="card-icon">薪</span>
+          <h3>薪資調整</h3>
+          <p class="stat-value" id="salaryMonth">—</p>
+          <small id="salaryUpdated">最後更新：—</small>
+          <span class="card-link">開啟文件 <b>→</b></span>
+        </a>
+        <a class="stat-card stat-card-dark" href="announcements.html">
+          <span class="card-number">03</span><span class="card-icon">總</span>
+          <h3>公告總數</h3>
+          <p class="stat-value" id="announcementTotal">—</p>
+          <small>完整歷史公告資料</small>
+          <span class="card-link">查看全部 <b>→</b></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="content-grid">
+      <div class="panel">
+        <div class="panel-heading"><div><p class="eyebrow">RECENT</p><h2>近期公告</h2></div><a href="announcements.html">查看全部 →</a></div>
+        <div id="recentAnnouncements" class="recent-list"><p class="empty">正在讀取公告…</p></div>
+      </div>
+      <aside class="panel categories-panel">
+        <p class="eyebrow">CATEGORIES</p><h2>公告分類</h2>
+        <div id="categoryLinks" class="category-links"></div>
+      </aside>
+    </section>
+  </main>
+
+  <footer><div class="shell"><span>SOBER HR Portal</span><span>內部文件查詢入口</span></div></footer>
+  <script src="js/common.js"></script>
+  <script src="js/home.js"></script>
+</body>
+</html>

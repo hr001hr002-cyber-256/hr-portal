@@ -1,0 +1,4 @@
+[
+  {"id":"sal-202607-01","date":"2026-07-08","employee":"範例員工 A","title":"薪資調整申請書－範例員工 A","keywords":["薪資調整","調薪"],"status":"有效","note":"核准文件","files":[{"type":"PDF","path":"docs/salary/2026-07/範例員工A/薪資調整申請書.pdf"},{"type":"Word","path":"docs/salary/2026-07/範例員工A/薪資調整申請書.docx"}]},
+  {"id":"sal-202606-01","date":"2026-06-25","employee":"範例員工 B","title":"薪資調整申請書－範例員工 B","keywords":["薪資調整","調薪"],"status":"有效","note":"核准文件","files":[{"type":"PDF","path":"docs/salary/2026-06/範例員工B/薪資調整申請書.pdf"}]}
+]

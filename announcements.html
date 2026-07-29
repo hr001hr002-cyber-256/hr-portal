@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>公告查詢｜SOBER HR Portal</title><link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header"><div class="shell header-inner"><a class="brand" href="index.html"><span class="brand-mark">S</span><span><strong>SOBER HR Portal</strong><small>人力資源入口網站</small></span></a><a class="back-link" href="index.html">← 回首頁</a></div></header>
+  <main class="shell page-main">
+    <section class="page-title"><p class="eyebrow">ANNOUNCEMENTS</p><h1>公告查詢</h1><p>依公告字號、主旨、關鍵字與分類快速篩選。</p></section>
+    <section class="filter-panel">
+      <label for="announcementQuery">搜尋公告</label>
+      <div class="inline-search"><input id="announcementQuery" type="search" placeholder="輸入關鍵字…"><button id="clearSearch" type="button">清除</button></div>
+      <div class="filter-row"><select id="categoryFilter" aria-label="分類篩選"><option value="">全部分類</option></select><select id="statusFilter" aria-label="狀態篩選"><option value="有效">有效</option><option value="">全部狀態</option><option value="已作廢">已作廢</option><option value="已取代">已取代</option></select></div>
+    </section>
+    <div class="results-heading"><h2 id="resultsTitle">所有公告</h2><span id="resultCount">0 件</span></div>
+    <div id="announcementResults" class="document-list"><p class="empty">正在讀取公告…</p></div>
+  </main>
+  <footer><div class="shell"><span>SOBER HR Portal</span><span>內部文件查詢入口</span></div></footer>
+  <script src="js/common.js"></script><script src="js/announcements.js"></script>
+</body>
+</html>
