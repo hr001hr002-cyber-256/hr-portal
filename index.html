@@ -43,7 +43,7 @@
       <section class="card"><h2><i>04</i> 平均工資資料</h2><p class="hint">每月應領工資＝原工資－未足月扣款－事假扣款－遲到扣款－其他排除工資。未足月以原工資÷30計算；事假 1 天以 8 小時計，未滿 1 天按實際時數，以原工資÷30÷8×事假時數計算；遲到扣款以原工資÷30÷8÷60×遲到分鐘數計算。各項扣款小數均無條件捨去。</p>
         <div class="wage-head"><span>年／月</span><span>原工資</span><span>未足月天數</span><span>事假時數</span><span>遲到分鐘</span><span>其他排除</span><span>應領工資</span><span></span></div><div id="wageRows"></div>
         <div class="row-actions"><button type="button" class="ghost" id="addWageRow">＋新增一列</button><button type="button" class="ghost" id="fillSixMonths">建立最近六個月</button></div>
-        <div class="grid"><label>最近一個月正常工資（選填）<input name="lastMonthlySalary" type="number" min="0"></label><label>月平均工資覆核值（選填）<input name="averageWageOverride" type="number" min="0" step="0.01"></label></div>
+        <div class="grid"><label>最近一個月正常工作時間所得工資（自動）<input name="lastMonthlySalary" type="number" min="0" readonly></label><label>月平均工資覆核值（選填）<input name="averageWageOverride" type="number" min="0" step="0.01"></label></div>
       </section>
       <div class="actions"><button class="primary" type="submit">開始計算</button><button class="ghost" type="reset">清除資料</button><span id="formMessage"></span></div>
     </form>

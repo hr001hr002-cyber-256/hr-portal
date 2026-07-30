@@ -30,13 +30,15 @@ function diffYmd(start,end){const stop=plus(end,1);let y=stop.getFullYear()-star
 const duration=d=>`${d.years}年${d.months}月${d.days}日`;
 
 function netWage(row){const original=+row.querySelector('.original').value||0;const partial=Math.floor(+row.querySelector('.partialDays').value||0);const leaveHours=Math.max(0,+row.querySelector('.leaveHours').value||0);const late=Math.floor(+row.querySelector('.lateMinutes').value||0);const other=+row.querySelector('.otherExclude').value||0;return Math.max(0,original-Math.floor(original/30*partial)-Math.floor(original/30/8*leaveHours)-Math.floor(original/30/8/60*late)-other)}
-function refreshNet(row){row.querySelector('.net-wage').value=Math.round(netWage(row))}
+function periodValue(value){const m=String(value||'').match(/(\d{3,4})\D+(\d{1,2})/);if(!m)return-1;const year=+m[1]<1911?+m[1]+1911:+m[1];return year*12+(+m[2]-1)}
+function syncLastMonthlySalary(){const rows=[...wageRows.children].filter(r=>+r.querySelector('.original').value>0).sort((a,b)=>periodValue(b.querySelector('.period').value)-periodValue(a.querySelector('.period').value));form.elements.lastMonthlySalary.value=rows.length?+rows[0].querySelector('.original').value:''}
+function refreshNet(row){row.querySelector('.net-wage').value=Math.round(netWage(row));syncLastMonthlySalary()}
 function addWageRow(label='',vals={}){
   const row=document.createElement('div');row.className='wage-row';
   const field=(name,title,attrs='',value='')=>`<label class="wage-field"><span>${title}</span><input class="${name}" aria-label="${title}" ${attrs} value="${value}"></label>`;
   row.innerHTML=`${field('period','年／月','placeholder="例如 115/07"',esc(label))}${field('original','原工資','type="number" min="0"',vals.original||'')}${field('partialDays','未足月天數','type="number" min="0" step="1"',vals.partialDays||'')}${field('leaveHours','事假時數','type="number" min="0" step="0.5"',vals.leaveHours??(vals.leaveDays?vals.leaveDays*8:''))}${field('lateMinutes','遲到分鐘','type="number" min="0"',vals.lateMinutes||'')}${field('otherExclude','其他排除','type="number" min="0"',vals.otherExclude||'')}${field('net-wage','應領工資','readonly','')}<button type="button" class="remove" title="刪除這筆薪資" aria-label="刪除這筆薪資">×</button>`;
-  row.querySelectorAll('input:not(.period):not(.net-wage)').forEach(x=>x.addEventListener('input',()=>refreshNet(row)));
-  row.querySelector('.remove').onclick=()=>row.remove();wageRows.append(row);refreshNet(row);
+  row.querySelectorAll('input:not(.net-wage)').forEach(x=>x.addEventListener('input',()=>refreshNet(row)));
+  row.querySelector('.remove').onclick=()=>{row.remove();syncLastMonthlySalary()};wageRows.append(row);refreshNet(row);
 }
 function recentMonths(){wageRows.innerHTML='';const end=date(form.elements.endDate.value)||new Date();const cursor=new Date(end.getFullYear(),end.getMonth(),1);for(let i=0;i<6;i++){const d=new Date(cursor);d.setMonth(d.getMonth()-i);addWageRow(`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`)}}
 document.querySelector('#addWageRow').onclick=()=>addWageRow();
@@ -53,18 +55,32 @@ function calculate(){
   const fd=Object.fromEntries(new FormData(form)),start=date(fd.startDate),end=date(fd.endDate);
   if(!start||!end||end<start)throw Error('請確認到職日與離職日');
   const tenure=diffYmd(start,end),wages=readWages();if(!wages.length)throw Error('請輸入工資資料');
-  const totalNet=wages.reduce((n,x)=>n+x.net,0);if(totalNet<=0)throw Error('總應領工資必須大於 0');
-  const fullSix=tenure.totalDays>=180&&wages.length>=6;
+  const sortedWages=[...wages].sort((a,b)=>periodValue(b.period)-periodValue(a.period)),averageWages=sortedWages.slice(0,6);
+  const totalNet=averageWages.reduce((n,x)=>n+x.net,0);if(totalNet<=0)throw Error('總應領工資必須大於 0');
+  const fullSix=tenure.totalDays>=180&&averageWages.length>=6;
   const daily=totalNet/tenure.totalDays;
   const monthly=+fd.averageWageOverride||(fullSix?totalNet/6:daily*30);
   const noticeApplies=/第11條|第13條/.test(fd.legalBasis);
   const completedMonths=tenure.years*12+tenure.months+(tenure.days?tenure.days/31:0);
   const noticeDays=noticeApplies?(completedMonths>=36?30:completedMonths>=12?20:completedMonths>=3?10:0):0;
-  const latestNotice=noticeDays?plus(end,-noticeDays):null,actual=date(fd.actualNoticeDate),actualDays=actual?days(actual,end):0,shortNotice=Math.max(0,noticeDays-actualDays),noticeDaily=Math.max(daily,(+fd.lastMonthlySalary||0)/30),noticePay=shortNotice*noticeDaily;
+  const latestNormalWage=sortedWages[0]?.original||0,noticeMonthly=Math.max(monthly,latestNormalWage),noticeDaily=noticeMonthly/30;
+  const latestNotice=noticeDays?plus(end,-noticeDays):null,actual=date(fd.actualNoticeDate),actualDays=actual?days(actual,end):0,shortNotice=Math.max(0,noticeDays-actualDays),noticePay=noticeDays*noticeDaily;
   const parts=tenureParts(start,end,fd.pensionSystem,date(fd.transitionDate)),newUnits=Math.min(parts.newPart.basis*.5,6),oldUnits=parts.oldPart.basis,severanceRaw=monthly*(newUnits+oldUnits),severance=Math.ceil(severanceRaw);
-  return{fd,start,end,tenure,wages,totalNet,fullSix,daily,monthly,noticeDays,latestNotice,actualDays,shortNotice,noticeDaily,noticePay,parts,newUnits,oldUnits,severance};
+  return{fd,start,end,tenure,wages,averageWages,totalNet,fullSix,daily,monthly,latestNormalWage,noticeMonthly,noticeDays,latestNotice,actualDays,shortNotice,noticeDaily,noticePay,parts,newUnits,oldUnits,severance};
 }
-function render(c){latest=c;results.hidden=false;document.querySelector('#noticeDays').textContent=`${c.noticeDays} 天`;document.querySelector('#noticeDetail').textContent=c.noticeDays?(c.shortNotice?`實際預告 ${c.actualDays} 天，不足 ${c.shortNotice} 天`:'已足法定預告期'):'此法源不適用預告期，顯示 0 天';document.querySelector('#latestNotice').textContent=c.latestNotice?ymd(c.latestNotice):'無';document.querySelector('#averageMonthly').textContent=money.format(c.monthly);document.querySelector('#averageDetail').textContent=`總應領 ${money.format(c.totalNet)}；總年資 ${c.tenure.totalDays} 日`;document.querySelector('#severancePay').textContent=money.format(c.severance);document.querySelector('#severanceDetail').textContent=`新制 ${c.newUnits.toFixed(4)} 個基數；舊制 ${c.oldUnits.toFixed(4)} 個基數`;document.querySelector('#calculationSheet').innerHTML=`<div class="calc-row"><span>總年資</span><b>離職日－到職日＋1＝${c.tenure.totalDays}日（${duration(c.tenure)}）</b></div><div class="calc-row"><span>平均工資</span><b>${money.format(c.totalNet)} ${c.fullSix?'÷ 6個月':`÷ ${c.tenure.totalDays}日 × 30`}＝${money.format(c.monthly)}</b></div><div class="calc-row"><span>資遣費</span><b>${money.format(c.monthly)} × (${c.newUnits.toFixed(6)}＋${c.oldUnits.toFixed(6)})＝${money.format(c.severance)}</b></div><div class="calc-row"><span>預告期間工資（另列）</span><b>${c.shortNotice}日 × ${money.format(c.noticeDaily)}＝${money.format(c.noticePay)}</b></div>`;results.scrollIntoView({behavior:'smooth'})}
+function render(c){
+  latest=c;results.hidden=false;
+  document.querySelector('#noticeDays').textContent=`${c.noticeDays} 天`;
+  document.querySelector('#noticeDetail').textContent=c.noticeDays?(c.shortNotice?`實際預告 ${c.actualDays} 天，不足 ${c.shortNotice} 天`:'已足法定預告期'):'此法源不適用預告期，顯示 0 天';
+  document.querySelector('#latestNotice').textContent=c.latestNotice?ymd(c.latestNotice):'無';
+  document.querySelector('#averageMonthly').textContent=money.format(c.monthly);
+  document.querySelector('#averageDetail').textContent=`最近 ${c.averageWages.length} 個月應領合計 ${money.format(c.totalNet)}；總年資 ${c.tenure.totalDays} 日`;
+  document.querySelector('#severancePay').textContent=money.format(c.severance);
+  document.querySelector('#severanceDetail').textContent=`新制 ${c.newUnits.toFixed(4)} 個基數；舊制 ${c.oldUnits.toFixed(4)} 個基數`;
+  const noticeBasis=c.latestNormalWage>=c.monthly?'最近一個月正常工資':'最近六個月平均工資';
+  document.querySelector('#calculationSheet').innerHTML=`<div class="calc-row"><span>總年資</span><b>離職日－到職日＋1＝${c.tenure.totalDays}日（${duration(c.tenure)}）</b></div><div class="calc-row"><span>最近六個月平均工資</span><b>${money.format(c.totalNet)} ${c.fullSix?'÷ 6個月':`÷ ${c.tenure.totalDays}日 × 30`}＝${money.format(c.monthly)}</b></div><div class="calc-row"><span>最近一個月正常工資</span><b>${money.format(c.latestNormalWage)}</b></div><div class="calc-row"><span>預告工資採用基準</span><b>${noticeBasis}（兩者取高）＝${money.format(c.noticeMonthly)}</b></div><div class="calc-row"><span>資遣費</span><b>${money.format(c.monthly)} × (${c.newUnits.toFixed(6)}＋${c.oldUnits.toFixed(6)})＝${money.format(c.severance)}</b></div><div class="calc-row"><span>預告期間工資（另列）</span><b>${money.format(c.noticeMonthly)} ÷ 30 × ${c.noticeDays}日＝${money.format(c.noticePay)}</b></div>`;
+  results.scrollIntoView({behavior:'smooth'});
+}
 form.onsubmit=e=>{e.preventDefault();const msg=document.querySelector('#formMessage');msg.textContent='';if(!form.reportValidity())return;try{render(calculate())}catch(err){msg.textContent=err.message}};
 form.onreset=()=>setTimeout(()=>{wageRows.innerHTML='';addWageRow();results.hidden=true;latest=null;document.querySelector('#transitionField').hidden=true},0);
 
