@@ -28,33 +28,33 @@
         <label>姓名<input name="employeeName" required></label><label>身分證字號<input name="employeeId" required></label>
         <label>出生日期<input name="birthDate" type="date"></label><label>性別<select name="gender"><option value="male">男</option><option value="female">女</option></select></label>
         <label>聯絡電話<input name="employeePhone"></label><label>部門<input name="department"></label>
-        <label>職稱<input name="jobTitle" required></label>
+        <label>職稱<input name="jobTitle" required></label><label>離職類型<select name="departureType" required><option value="">請選擇</option><option value="voluntary">自願離職</option><option value="involuntary">非自願離職</option></select></label>
+        <label>到職日<input name="startDate" type="date" required></label><label>最後工作日／離職日<input name="endDate" type="date" required></label>
         <label class="wide">通訊地址<input name="employeeAddress"></label>
       </div></section>
 
-      <section class="card"><h2><i>03</i> 終止契約資料</h2><div class="grid">
-        <label>到職日<input name="startDate" type="date" required></label><label>最後工作日／離職日<input name="endDate" type="date" required></label>
+      <section class="card" id="terminationSection"><h2><i>03</i> 終止契約資料</h2><div class="grid">
         <label class="wide">法源依據<select name="legalBasis" required><option value="">請選擇</option><option>勞動基準法第11條第1款－歇業或轉讓</option><option>勞動基準法第11條第2款－虧損或業務緊縮</option><option>勞動基準法第11條第3款－不可抗力暫停工作逾一個月</option><option>勞動基準法第11條第4款－業務性質變更，有減少勞工必要</option><option>勞動基準法第11條第5款－勞工對所擔任工作確不能勝任</option><option>勞動基準法第13條但書</option><option>勞動基準法第20條－事業單位改組或轉讓</option><option>勞動基準法第14條－勞工不經預告終止契約</option><option value="other">其他（請在理由說明）</option></select></label>
         <label class="wide">資遣理由／事實說明<textarea name="reasonDetail" rows="3" required></textarea></label>
         <label>實際預告日（沒有可留白）<input name="actualNoticeDate" type="date"></label><label>薪資／資遣費發放日<input name="settlementDate" type="date"></label>
         <label>退休金制度<select name="pensionSystem"><option value="new">全部新制</option><option value="old">全部舊制</option><option value="mixed">新舊制並存</option></select></label><label id="transitionField" hidden>轉換新制日期<input name="transitionDate" type="date" value="2005-07-01"></label>
       </div><p class="warning">本工具協助試算與套版，不會判斷個案資遣是否合法；特殊保護身分、排除期間及爭議工資項目請另行確認。</p></section>
 
-      <section class="card"><h2><i>04</i> 平均工資資料</h2><p class="hint">每月應領工資＝原工資－未足月扣款－事假扣款－遲到扣款－其他排除工資。未足月以原工資÷30計算；事假 1 天以 8 小時計，未滿 1 天按實際時數，以原工資÷30÷8×事假時數計算；遲到扣款以原工資÷30÷8÷60×遲到分鐘數計算。各項扣款小數均無條件捨去。</p>
+      <section class="card" id="wageSection"><h2><i>04</i> 平均工資資料</h2><p class="hint">每月應領工資＝原工資－未足月扣款－事假扣款－遲到扣款－其他排除工資。未足月以原工資÷30計算；事假 1 天以 8 小時計，未滿 1 天按實際時數，以原工資÷30÷8×事假時數計算；遲到扣款以原工資÷30÷8÷60×遲到分鐘數計算。各項扣款小數均無條件捨去。</p>
         <div class="wage-head"><span>年／月</span><span>原工資</span><span>未足月天數</span><span>事假時數</span><span>遲到分鐘</span><span>其他排除</span><span>應領工資</span><span></span></div><div id="wageRows"></div>
         <div class="row-actions"><button type="button" class="ghost" id="addWageRow">＋新增一列</button><button type="button" class="ghost" id="fillSixMonths">建立最近六個月</button></div>
         <div class="grid"><label>最近一個月正常工作時間所得工資（自動）<input name="lastMonthlySalary" type="number" min="0" readonly></label><label>月平均工資覆核值（選填）<input name="averageWageOverride" type="number" min="0" step="0.01"></label></div>
       </section>
-      <div class="actions"><button class="primary" type="submit">開始計算</button><button class="ghost" type="reset">清除資料</button><span id="formMessage"></span></div>
+      <div class="actions"><button class="primary" id="submitForm" type="submit">開始計算</button><button class="ghost" type="reset">清除資料</button><span id="formMessage"></span></div>
     </form>
 
-    <section id="results" class="card results" hidden><h2>計算結果</h2><div class="metrics">
+    <section id="results" class="card results" hidden><h2 id="resultsTitle">計算結果</h2><div class="metrics" id="resultMetrics">
       <article><small>法定預告天數</small><strong id="noticeDays">0 天</strong><p id="noticeDetail"></p></article>
       <article><small>預告日期</small><strong id="latestNotice">—</strong><p>優先顯示實際預告日；未填時顯示仍可符合期限的最晚預告日。</p></article>
       <article><small>月平均工資</small><strong id="averageMonthly">NT$0</strong><p id="averageDetail"></p></article>
       <article class="accent"><small>資遣費</small><strong id="severancePay">NT$0</strong><p id="severanceDetail"></p></article>
     </div><div id="calculationSheet" class="details"></div>
-      <div class="documents"><div><h2>PDF 文件產生器</h2><p>依公司表單套入資料，再列印或另存為 PDF。</p></div><div><button data-doc="notice">產生資遣通知書 PDF</button><button data-doc="average">產生平均工資明細 PDF</button><button data-doc="service">產生離職證明 PDF</button><button data-doc="involuntary">產生非自願離職證明 PDF</button></div></div>
+      <div class="documents"><div><h2>PDF 文件產生器</h2><p id="documentsHint">依公司表單套入資料，再列印或另存為 PDF。</p></div><div><button data-doc="notice" data-involuntary>產生資遣通知書 PDF</button><button data-doc="average" data-involuntary>產生平均工資明細 PDF</button><button data-doc="service">產生離職證明 PDF</button><button data-doc="involuntary" data-involuntary>產生非自願離職證明 PDF</button></div></div>
     </section>
   </main>
   <dialog id="documentDialog"><div class="dialogbar"><b id="dialogTitle"></b><div><button id="printDocument">列印／另存 PDF</button><button id="closeDialog">關閉</button></div></div><div id="documentPreview" class="paper"></div></dialog>

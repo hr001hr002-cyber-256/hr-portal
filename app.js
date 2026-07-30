@@ -46,6 +46,16 @@ document.querySelector('#fillSixMonths').onclick=recentMonths;
 form.elements.companyKey.onchange=e=>{const c=COMPANIES[e.target.value]||{};for(const [field,key] of [['companyId','id'],['representative','representative'],['companyPhone','phone'],['insuranceNo','insuranceNo'],['companyAddress','address']])form.elements[field].value=c[key]||''};
 form.elements.workplaceRegion.onchange=e=>form.elements.workplace.value=WORKPLACES[e.target.value]?.address||'';
 form.elements.pensionSystem.onchange=e=>document.querySelector('#transitionField').hidden=e.target.value!=='mixed';
+function setDepartureFlow(){
+  const voluntary=form.elements.departureType.value==='voluntary';
+  for(const id of ['terminationSection','wageSection']){
+    const section=document.querySelector(`#${id}`);section.hidden=voluntary;
+    section.querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=voluntary);
+  }
+  document.querySelector('#submitForm').textContent=voluntary?'開啟文件產生器':'開始計算';
+  results.hidden=true;latest=null;
+}
+form.elements.departureType.onchange=setDepartureFlow;
 
 function readWages(){return[...wageRows.children].map(r=>{const original=+r.querySelector('.original').value||0,partialDays=Math.floor(+r.querySelector('.partialDays').value||0),leaveHours=Math.max(0,+r.querySelector('.leaveHours').value||0),lateMinutes=Math.floor(+r.querySelector('.lateMinutes').value||0),otherExclude=+r.querySelector('.otherExclude').value||0;return{period:r.querySelector('.period').value.trim(),original,partialDays,leaveHours,lateMinutes,otherExclude,partialDeduction:Math.floor(original/30*partialDays),leaveDeduction:Math.floor(original/30/8*leaveHours),lateDeduction:Math.floor(original/30/8/60*lateMinutes),net:netWage(r)}}).filter(x=>x.original||x.period)}
 function newBasis(s,e){if(s>e)return{duration:{years:0,months:0,days:0,totalDays:0},basis:0};const d=diffYmd(s,e);return{duration:d,basis:d.years+(d.months+d.days/30)/12}}
@@ -68,8 +78,17 @@ function calculate(){
   const parts=tenureParts(start,end,fd.pensionSystem,date(fd.transitionDate)),newUnits=Math.min(parts.newPart.basis*.5,6),oldUnits=parts.oldPart.basis,severanceRaw=monthly*(newUnits+oldUnits),severance=Math.ceil(severanceRaw);
   return{fd,start,end,tenure,wages,averageWages,totalNet,fullSix,daily,monthly,latestNormalWage,noticeMonthly,noticeDays,latestNotice,displayNoticeDate,actualDays,shortNotice,noticeDaily,noticePay,parts,newUnits,oldUnits,severance};
 }
+function voluntaryContext(){const fd=Object.fromEntries(new FormData(form)),start=date(fd.startDate),end=date(fd.endDate);if(!start||!end||end<start)throw Error('請確認到職日與離職日');return{fd,start,end,tenure:diffYmd(start,end)}}
+function setResultMode(voluntary){
+  document.querySelector('#resultsTitle').textContent=voluntary?'離職證明文件產生器':'計算結果';
+  document.querySelector('#resultMetrics').hidden=voluntary;
+  document.querySelector('#calculationSheet').hidden=voluntary;
+  document.querySelector('#documentsHint').textContent=voluntary?'資料已備妥，可直接預覽、列印或另存離職證明 PDF。':'依公司表單套入資料，再列印或另存為 PDF。';
+  document.querySelectorAll('[data-involuntary]').forEach(button=>button.hidden=voluntary);
+}
+function renderVoluntary(c){latest=c;setResultMode(true);results.hidden=false;results.scrollIntoView({behavior:'smooth'})}
 function render(c){
-  latest=c;results.hidden=false;
+  latest=c;setResultMode(false);results.hidden=false;
   document.querySelector('#noticeDays').textContent=`${c.noticeDays} 天`;
   document.querySelector('#noticeDetail').textContent=c.noticeDays?(c.shortNotice?`實際預告 ${c.actualDays} 天，不足 ${c.shortNotice} 天`:'已足法定預告期'):'此法源不適用預告期，顯示 0 天';
   document.querySelector('#latestNotice').textContent=c.displayNoticeDate?ymd(c.displayNoticeDate):'無';
@@ -81,8 +100,8 @@ function render(c){
   document.querySelector('#calculationSheet').innerHTML=`<div class="calc-row"><span>總年資</span><b>離職日－到職日＋1＝${c.tenure.totalDays}日（${duration(c.tenure)}）</b></div><div class="calc-row"><span>最近六個月平均工資</span><b>${money.format(c.totalNet)} ${c.fullSix?'÷ 6個月':`÷ ${c.tenure.totalDays}日 × 30`}＝${money.format(c.monthly)}</b></div><div class="calc-row"><span>最近一個月正常工資</span><b>${money.format(c.latestNormalWage)}</b></div><div class="calc-row"><span>預告工資採用基準</span><b>${noticeBasis}（兩者取高）＝${money.format(c.noticeMonthly)}</b></div><div class="calc-row"><span>資遣費</span><b>${money.format(c.monthly)} × (${c.newUnits.toFixed(6)}＋${c.oldUnits.toFixed(6)})＝${money.format(c.severance)}</b></div><div class="calc-row"><span>預告期間工資（另列）</span><b>${money.format(c.noticeMonthly)} ÷ 30 × ${c.noticeDays}日＝${money.format(c.noticePay)}</b></div>`;
   results.scrollIntoView({behavior:'smooth'});
 }
-form.onsubmit=e=>{e.preventDefault();const msg=document.querySelector('#formMessage');msg.textContent='';if(!form.reportValidity())return;try{render(calculate())}catch(err){msg.textContent=err.message}};
-form.onreset=()=>setTimeout(()=>{wageRows.innerHTML='';addWageRow();results.hidden=true;latest=null;document.querySelector('#transitionField').hidden=true},0);
+form.onsubmit=e=>{e.preventDefault();const msg=document.querySelector('#formMessage');msg.textContent='';if(!form.reportValidity())return;try{form.elements.departureType.value==='voluntary'?renderVoluntary(voluntaryContext()):render(calculate())}catch(err){msg.textContent=err.message}};
+form.onreset=()=>setTimeout(()=>{wageRows.innerHTML='';addWageRow();results.hidden=true;latest=null;document.querySelector('#transitionField').hidden=true;setDepartureFlow()},0);
 
 function setCell(xml,address,value){const doc=new DOMParser().parseFromString(xml,'application/xml'),ns=doc.documentElement.namespaceURI;let cell=[...doc.getElementsByTagNameNS(ns,'c')].find(x=>x.getAttribute('r')===address);if(!cell){const rowNum=address.match(/\d+/)[0];let row=[...doc.getElementsByTagNameNS(ns,'row')].find(x=>x.getAttribute('r')===rowNum);if(!row){row=doc.createElementNS(ns,'row');row.setAttribute('r',rowNum);doc.getElementsByTagNameNS(ns,'sheetData')[0].appendChild(row)}cell=doc.createElementNS(ns,'c');cell.setAttribute('r',address);row.appendChild(cell)}[...cell.children].forEach(x=>{if(['v','f','is'].includes(x.localName))x.remove()});cell.setAttribute('t','inlineStr');const is=doc.createElementNS(ns,'is'),t=doc.createElementNS(ns,'t');t.textContent=String(value??'');is.appendChild(t);cell.appendChild(is);return new XMLSerializer().serializeToString(doc)}
 function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
