@@ -3,6 +3,10 @@
 .wage-field span{display:none}
 .wage-field input{width:100%;min-width:0}
 .net-wage{background:#edf4f1!important;color:#21483d!important;font-weight:700}
+.roc-date-picker{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;width:100%}
+.roc-date-picker .roc-date{min-width:0}
+.roc-calendar-button{border:1px solid #294f43;border-radius:9px;padding:8px 12px;background:#fff;color:#294f43;white-space:nowrap;cursor:pointer}
+.native-date-picker{position:absolute;right:0;bottom:0;width:1px;height:1px;padding:0;border:0;opacity:0;pointer-events:none}
 @media(max-width:760px){
   .wage-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px;gap:10px;padding:14px;margin-bottom:14px;border:1px solid #d9dfdc;border-radius:12px;background:#f8faf9}
   .wage-field{grid-column:span 1;font-size:13px;gap:4px}

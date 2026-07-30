@@ -29,7 +29,22 @@ const rocLong=roc;
 function diffYmd(start,end){const stop=plus(end,1);let y=stop.getFullYear()-start.getFullYear(),cur=new Date(start);cur.setFullYear(cur.getFullYear()+y);if(cur>stop){y--;cur=new Date(start);cur.setFullYear(cur.getFullYear()+y)}let m=0;while(m<11){const n=new Date(cur);n.setMonth(n.getMonth()+1);if(n>stop)break;cur=n;m++}return{years:y,months:m,days:days(cur,stop),totalDays:days(start,end)+1}}
 const duration=d=>`${d.years}年${d.months}月${d.days}日`;
 
-function installRocDateInputs(){document.querySelectorAll('.roc-date').forEach(input=>{input.addEventListener('input',()=>input.setCustomValidity(''));input.addEventListener('blur',()=>{if(!input.value)return input.setCustomValidity('');const parsed=date(input.value);if(!parsed)return input.setCustomValidity('請使用民國年月日格式，例如：民國115年07月30日');input.value=ymd(parsed);input.setCustomValidity('')});if(input.value){const parsed=date(input.value);if(parsed)input.value=ymd(parsed)}})}
+function installRocDateInputs(){
+  const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  document.querySelectorAll('.roc-date').forEach(input=>{
+    const wrap=document.createElement('span');wrap.className='roc-date-picker';input.before(wrap);wrap.append(input);
+    const button=document.createElement('button');button.type='button';button.className='roc-calendar-button';button.setAttribute('aria-label','開啟日期選單');button.textContent='選擇日期';
+    const picker=document.createElement('input');picker.type='date';picker.className='native-date-picker';picker.tabIndex=-1;picker.setAttribute('aria-label','西元日期選單');
+    wrap.append(button,picker);
+    const syncFromText=()=>{if(!input.value){picker.value='';input.setCustomValidity('');return}const parsed=date(input.value);if(!parsed){input.setCustomValidity('請使用民國年月日格式，例如：民國115年07月30日');return}input.value=ymd(parsed);picker.value=iso(parsed);input.setCustomValidity('')};
+    input.addEventListener('input',()=>input.setCustomValidity(''));
+    input.addEventListener('blur',syncFromText);
+    picker.addEventListener('change',()=>{const parsed=date(picker.value);input.value=parsed?ymd(parsed):'';input.setCustomValidity('');input.dispatchEvent(new Event('change',{bubbles:true}))});
+    button.addEventListener('click',()=>{if(typeof picker.showPicker==='function')picker.showPicker();else picker.click()});
+    syncFromText();
+  });
+  form.addEventListener('reset',()=>setTimeout(()=>document.querySelectorAll('.roc-date').forEach(input=>input.dispatchEvent(new Event('blur'))),0));
+}
 installRocDateInputs();
 
 function netWage(row){const original=+row.querySelector('.original').value||0;const bonus=+row.querySelector('.bonus').value||0;const partial=Math.floor(+row.querySelector('.partialDays').value||0);const leaveHours=Math.max(0,+row.querySelector('.leaveHours').value||0);const late=Math.floor(+row.querySelector('.lateMinutes').value||0);const other=+row.querySelector('.otherExclude').value||0;return Math.max(0,original+bonus-Math.floor(original/30*partial)-Math.floor(original/30/8*leaveHours)-Math.floor(original/30/8/60*late)-other)}
