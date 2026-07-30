@@ -186,7 +186,7 @@ function officialInvoluntaryPdf(c){
   const mark=key=>reason===key?`<span class="official-check check-${key}">✓</span>`:'';
   const dateParts=value=>{
     const d=typeof value==='string'?date(value):value;
-    return d?`${d.getFullYear()-1911} 年 ${String(d.getMonth()+1).padStart(2,'0')} 月 ${String(d.getDate()).padStart(2,'0')} 日`:'';
+    return d?`${d.getFullYear()-1911}　　${String(d.getMonth()+1).padStart(2,'0')}　　${String(d.getDate()).padStart(2,'0')}`:'';
   };
   return `<div class="official-form-document">
     <section class="official-page official-page-one">
@@ -194,8 +194,8 @@ function officialInvoluntaryPdf(c){
       ${field('field-issue-date',dateParts(new Date()))}
       ${field('field-name',c.fd.employeeName)}
       ${field('field-birth-date',dateParts(c.fd.birthDate))}
-      <span class="official-gender gender-male ${c.fd.gender==='female'?'':'selected'}">□</span>
-      <span class="official-gender gender-female ${c.fd.gender==='female'?'selected':''}">□</span>
+      <span class="official-gender gender-male ${c.fd.gender==='female'?'':'selected'}">□男</span>
+      <span class="official-gender gender-female ${c.fd.gender==='female'?'selected':''}">□女</span>
       ${field('field-id',c.fd.employeeId)}
       ${field('field-address',c.fd.employeeAddress)}
       ${field('field-phone',c.fd.employeePhone)}

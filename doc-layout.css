@@ -74,15 +74,15 @@
 .paper .field-issue-date{left:74.2%;top:4.55%;width:17.8%}
 .paper .field-name{left:18.2%;top:7.35%;width:31%}
 .paper .field-birth-date{left:70.2%;top:7.35%;width:21.8%}
-.paper .official-gender{left:19.1%;width:5.8%;height:1.75%;padding-left:.2%;background:#fff;font-size:16px;font-family:"Microsoft JhengHei",sans-serif}
+.paper .official-gender{left:19.1%;width:6.4%;height:1.75%;padding-left:.2%;background:#fff;font-size:14px;font-family:"DFKai-SB","BiauKai","標楷體",serif}
 .paper .official-gender.selected{font-weight:900;color:transparent}
 .paper .official-gender.selected::before{content:"■";position:absolute;left:.15em;color:#000}
 .paper .gender-male{top:11.05%}
 .paper .gender-female{top:12.65%}
-.paper .field-id{left:50.5%;top:10.85%;width:41.5%;letter-spacing:.65em;padding-left:1.2%;font-family:"Microsoft JhengHei",sans-serif}
+.paper .field-id{left:50.6%;top:10.85%;width:41.3%;height:3.45%;padding-left:1.8%;background:#fff;font-size:16px;letter-spacing:.08em;font-family:"DFKai-SB","BiauKai","標楷體",serif}
 .paper .field-address{left:18.2%;top:14.25%;width:43.6%}
-.paper .field-phone{left:67.2%;top:14.25%;width:24.8%}
-.paper .field-end-date{left:50.4%;top:17.7%;width:16.2%}
+.paper .field-phone{left:70.7%;top:14.25%;width:21.3%}
+.paper .field-end-date{left:49%;top:17.7%;width:17.6%}
 .paper .field-workplace{left:76.1%;top:17.7%;width:15.9%;justify-content:center;white-space:normal;text-align:center;font-size:12px;line-height:1.15;background:#fff}
 .paper .official-check{width:1.9%;height:1.55%;font:700 16px/1 "Microsoft JhengHei",sans-serif;background:#fff;justify-content:center}
 .paper .check-closure{left:21.4%;top:23.65%}.paper .check-relocation{left:32.5%;top:23.65%}.paper .check-suspension{left:43.5%;top:23.65%}.paper .check-dissolution{left:54.6%;top:23.65%}.paper .check-bankruptcy{left:65.8%;top:23.65%}
