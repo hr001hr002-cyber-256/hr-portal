@@ -20,7 +20,7 @@ const WORKPLACES={
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const xmlEsc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-const date=v=>{if(!v)return null;if(v instanceof Date)return new Date(v);const text=String(v).trim();let m=text.match(/^(?:民國\s*)?(\d{2,3})\s*[年\/.-]\s*(\d{1,2})\s*[月\/.-]\s*(\d{1,2})\s*日?$/);if(m){const year=+m[1]+1911,d=new Date(year,+m[2]-1,+m[3],12);return d.getFullYear()===year&&d.getMonth()===+m[2]-1&&d.getDate()===+m[3]?d:null}m=text.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m){const d=new Date(+m[1],+m[2]-1,+m[3],12);return d.getFullYear()===+m[1]&&d.getMonth()===+m[2]-1&&d.getDate()===+m[3]?d:null}return null};
+const date=v=>{if(!v)return null;if(v instanceof Date)return new Date(v);const text=String(v).trim();let m=text.match(/^(\d{6,8})$/);if(m){const digits=m[1],prefix=+digits.slice(0,-4),month=+digits.slice(-4,-2),day=+digits.slice(-2),year=digits.length===8&&prefix>=1911?prefix:prefix+1911,d=new Date(year,month-1,day,12);return d.getFullYear()===year&&d.getMonth()===month-1&&d.getDate()===day?d:null}m=text.match(/^(?:民國\s*)?(\d{2,3})\s*[年\/.-]\s*(\d{1,2})\s*[月\/.-]\s*(\d{1,2})\s*日?$/);if(m){const year=+m[1]+1911,d=new Date(year,+m[2]-1,+m[3],12);return d.getFullYear()===year&&d.getMonth()===+m[2]-1&&d.getDate()===+m[3]?d:null}m=text.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m){const d=new Date(+m[1],+m[2]-1,+m[3],12);return d.getFullYear()===+m[1]&&d.getMonth()===+m[2]-1&&d.getDate()===+m[3]?d:null}return null};
 const plus=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const days=(a,b)=>Math.max(0,Math.round((b-a)/86400000));
 const ymd=v=>{const d=typeof v==='string'?date(v):v;return d?`民國${d.getFullYear()-1911}年${String(d.getMonth()+1).padStart(2,'0')}月${String(d.getDate()).padStart(2,'0')}日`:'—'};
@@ -46,6 +46,8 @@ function installRocDateInputs(){
   form.addEventListener('reset',()=>setTimeout(()=>document.querySelectorAll('.roc-date').forEach(input=>input.dispatchEvent(new Event('blur'))),0));
 }
 installRocDateInputs();
+function installEmployeeIdValidation(){const input=form.elements.employeeId;const validate=()=>{input.value=input.value.toUpperCase();input.setCustomValidity(input.value&&!/^[A-Z][0-9]{9}$/.test(input.value)?'身分證字號須為第1碼英文字母，加上9碼數字':'')};input.addEventListener('input',validate);input.addEventListener('blur',validate)}
+installEmployeeIdValidation();
 
 function netWage(row){const original=+row.querySelector('.original').value||0;const bonus=+row.querySelector('.bonus').value||0;const partial=Math.floor(+row.querySelector('.partialDays').value||0);const leaveHours=Math.max(0,+row.querySelector('.leaveHours').value||0);const late=Math.floor(+row.querySelector('.lateMinutes').value||0);const other=+row.querySelector('.otherExclude').value||0;return Math.max(0,original+bonus-Math.floor(original/30*partial)-Math.floor(original/30/8*leaveHours)-Math.floor(original/30/8/60*late)-other)}
 function periodValue(value){const m=String(value||'').match(/(\d{3,4})\D+(\d{1,2})/);if(!m)return-1;const year=+m[1]<1911?+m[1]+1911:+m[1];return year*12+(+m[2]-1)}
