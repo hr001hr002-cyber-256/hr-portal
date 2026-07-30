@@ -7,7 +7,7 @@
   <title>SOBER 資遣費計算工具</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="wage.css?v=20260730-roc-picker">
-  <link rel="stylesheet" href="doc-layout.css?v=20260730-bonus">
+  <link rel="stylesheet" href="doc-layout.css?v=20260730-official-form-fix">
   <link rel="stylesheet" href="mobile.css?v=20260730-print-clean">
 </head>
 <body>
@@ -22,7 +22,7 @@
         <label class="wide">公司登記／投保單位地址<input name="companyAddress" readonly></label>
         <label>實際工作地<select name="workplaceRegion" required><option value="">請選擇</option><option value="taipei">台北</option><option value="taichung">台中</option><option value="kaohsiung">高雄</option><option value="tainan">台南</option></select></label>
         <label>實際工作地址<input name="workplace" readonly></label>
-      </div><p class="hint">離職證明單使用「實際工作地址」；非自願離職證明的投保單位地址使用所選公司的登記地址。</p></section>
+      </div><p class="hint">離職證明單使用「實際工作地址」。</p></section>
 
       <section class="card"><h2><i>02</i> 員工基本資料</h2><div class="grid">
         <label>姓名<input name="employeeName" required></label><label>身分證字號<input name="employeeId" required></label>
@@ -59,5 +59,5 @@
   </main>
   <dialog id="documentDialog"><div class="dialogbar"><b id="dialogTitle"></b><div><button id="togglePreviewZoom" type="button">放大閱讀</button><button id="printDocument">列印／另存 PDF</button><button id="closeDialog">關閉</button></div></div><div id="documentPreview" class="paper"></div></dialog>
   <footer>試算結果僅供作業輔助；正式文件請由承辦人覆核。</footer>
-  <script src="vendor/jszip.min.js"></script><script src="app.js?v=20260730-roc-picker"></script>
+  <script src="vendor/jszip.min.js"></script><script src="app.js?v=20260730-official-form-fix"></script>
 </body></html>

@@ -206,8 +206,9 @@ function officialInvoluntaryPdf(c){
       ${mark('lsa-14-1')}${mark('lsa-14-2')}${mark('lsa-14-3')}${mark('lsa-14-4')}${mark('lsa-14-5')}${mark('lsa-14-6')}
       ${mark('lsa-13')}${mark('lsa-20')}${mark('fixed-term')}${mark('voluntary')}${mark('other')}
       ${reason==='other'?field('field-other-reason',c.fd.reasonDetail):''}
+      ${field('field-unit-name',company.name)}
       ${field('field-insurance-no',company.insuranceNo)}
-      ${field('field-unit-phone','02-2208-2928#256、213')}
+      ${field('field-unit-phone',company.phone)}
       ${field('field-unit-address',company.address)}
       ${field('field-contact-phone','02-2208-2928#256、213')}
     </section>
