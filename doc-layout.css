@@ -64,3 +64,40 @@
 .paper .approval-three{margin-top:12px;direction:rtl}
 .paper .approval-three th{width:33.333%}
 .paper .approval-three td{height:48px}
+.paper:has(.official-form-document){width:210mm;padding:0!important;background:#ddd}
+.paper .official-form-document{width:210mm;margin:0 auto;color:#000;font-family:"DFKai-SB","BiauKai","標楷體",serif;font-size:14px;line-height:1}
+.paper .official-page{position:relative;width:210mm;height:297mm;overflow:hidden;background:#fff}
+.paper .official-page>img{display:block;width:100%;height:100%;object-fit:fill}
+.paper .official-field,.paper .official-check,.paper .official-gender{position:absolute;z-index:1;display:flex;align-items:center;white-space:nowrap}
+.paper .official-field{height:3.1%;padding:0 .25%;overflow:hidden;font-size:14px;background:#fff}
+.paper .field-issue-date{left:65.1%;top:4.55%;width:27%}
+.paper .field-name{left:18.2%;top:7.35%;width:31%}
+.paper .field-birth-date{left:65.3%;top:7.35%;width:26.4%}
+.paper .official-gender{left:19.1%;width:5.8%;height:1.75%;padding-left:.2%;background:#fff;font-size:16px;font-family:"Microsoft JhengHei",sans-serif}
+.paper .official-gender.selected{font-weight:900;color:transparent}
+.paper .official-gender.selected::before{content:"■";position:absolute;left:.15em;color:#000}
+.paper .gender-male{top:11.05%}
+.paper .gender-female{top:12.65%}
+.paper .field-id{left:50.5%;top:10.85%;width:41.5%;letter-spacing:.65em;padding-left:1.2%;font-family:"Microsoft JhengHei",sans-serif}
+.paper .field-address{left:18.2%;top:14.25%;width:43.6%}
+.paper .field-phone{left:67.2%;top:14.25%;width:24.8%}
+.paper .field-end-date{left:42%;top:17.7%;width:24.4%}
+.paper .field-workplace{left:76.1%;top:17.7%;width:15.9%;justify-content:center;white-space:normal;text-align:center;font-size:12px;line-height:1.15}
+.paper .official-check{width:1.9%;height:1.55%;font:700 16px/1 "Microsoft JhengHei",sans-serif;background:#fff;justify-content:center}
+.paper .check-closure{left:21.4%;top:23.65%}.paper .check-relocation{left:32.5%;top:23.65%}.paper .check-suspension{left:43.5%;top:23.65%}.paper .check-dissolution{left:54.6%;top:23.65%}.paper .check-bankruptcy{left:65.8%;top:23.65%}
+.paper .check-lsa-11-1{left:39.7%;top:25.55%}.paper .check-lsa-11-2{left:48.6%;top:25.55%}.paper .check-lsa-11-3{left:56.1%;top:25.55%}.paper .check-lsa-11-4{left:64.8%;top:25.55%}.paper .check-lsa-11-5{left:72.2%;top:25.55%}
+.paper .check-lsa-14-1{left:45.3%;top:27.55%}.paper .check-lsa-14-2{left:54.4%;top:27.55%}.paper .check-lsa-14-3{left:63.4%;top:27.55%}.paper .check-lsa-14-4{left:72.3%;top:27.55%}.paper .check-lsa-14-5{left:81%;top:27.55%}.paper .check-lsa-14-6{left:89.7%;top:27.55%}
+.paper .check-lsa-13{left:21.4%;top:29.52%}.paper .check-lsa-20{left:47.2%;top:29.52%}
+.paper .check-fixed-term{left:21.4%;top:31.45%}.paper .check-voluntary{left:25.1%;top:34.3%}.paper .check-other{left:34.2%;top:34.3%}
+.paper .field-other-reason{left:42.2%;top:33.45%;width:24.7%;height:2%;font-size:12px}
+.paper .field-insurance-no{left:35.2%;top:60.8%;width:22%;height:2.4%}
+.paper .field-unit-phone{left:72.2%;top:60.8%;width:19.8%;height:2.4%;font-size:11px}
+.paper .field-unit-address{left:36.8%;top:64.2%;width:55.2%;height:2.4%;font-size:12px}
+.paper .field-contact-phone{left:55.6%;top:69.6%;width:20%;height:2.4%;font-size:11px}
+@media print{
+  @page{size:A4 portrait;margin:0}
+  .paper:has(.official-form-document){width:210mm!important;margin:0!important;background:#fff}
+  .paper .official-form-document{width:210mm!important}
+  .paper .official-page{break-after:page;page-break-after:always}
+  .paper .official-page:last-child{break-after:auto;page-break-after:auto}
+}

@@ -137,6 +137,65 @@ function averagePdf(c){
 }
 function servicePdf(c){const company=COMPANIES[c.fd.companyKey];return `<div class="service-document"><header class="service-heading"><h1>離 職 證 明 單</h1><div class="service-title-rule"><span></span><i></i><span></span></div></header><section class="service-section employee-section"><h2>員工基本資料</h2><table class="doc-table service-employee-table"><colgroup><col class="service-label"><col class="service-value"><col class="service-label"><col class="service-value"></colgroup><tr><th>姓名</th><td>${esc(c.fd.employeeName)}</td><th>出生年月日</th><td>${rocLong(c.fd.birthDate)}</td></tr><tr><th>性別</th><td>${c.fd.gender==='female'?'女':'男'}</td><th>身分證字號</th><td>${esc(c.fd.employeeId)}</td></tr><tr><th>服務部門</th><td>${esc(c.fd.department)}</td><th>職稱</th><td>${esc(c.fd.jobTitle)}</td></tr><tr><th>到職日期</th><td>${rocLong(c.start)}</td><th>離職日期</th><td>${rocLong(c.end)}</td></tr></table></section><div class="service-statement"><span></span><b>上列各項確實無訛，特此證明</b><span></span></div><section class="service-section company-section"><h2>公司資訊</h2><div class="company-info-layout"><div class="company-details"><p><strong>公司名稱：</strong>${esc(company.name)}</p><p><strong>營利事業登記證字號：</strong>${esc(company.id)}</p><p><strong>地址：</strong>${esc(c.fd.workplace)}</p><p><strong>負責人：</strong>${esc(company.representative)}</p><p><strong>電話：</strong>${esc(company.phone)}</p></div><div class="company-seals"><div><span>公司章</span><i></i></div><div><span>負責人簽章</span><i></i></div></div></div></section><div class="service-issue-date">${rocLong(new Date())}</div></div>`}
 function involuntaryPdf(c){const company=COMPANIES[c.fd.companyKey],work=WORKPLACES[c.fd.workplaceRegion];return `<h1 class="doc-title">非 自 願 離 職 證 明 書</h1><p class="doc-note">本證明書依就業保險相關規定使用，內容請於送出前再次核對。</p>${docTable([['姓名',c.fd.employeeName,'出生日期',rocLong(c.fd.birthDate)],['性別',c.fd.gender==='female'?'□男　■女':'■男　□女','身分證號碼',c.fd.employeeId],['住址',c.fd.employeeAddress,'電話',c.fd.employeePhone],['離職當月工資',Math.round(+c.fd.lastMonthlySalary||c.wages.at(-1)?.net||0).toLocaleString(),'離職日',roc(c.end)],['實際工作地',work?.label||'','職稱',c.fd.jobTitle]])}<table class="doc-table"><tr><th>離職原因<br>（僅可勾選一項）</th><td class="checkboxes">${esc(legalCheckboxes(c.fd.legalBasis))}<br>事實說明：${esc(c.fd.reasonDetail)}</td></tr><tr><th>投保單位證明欄</th><td>投保單位名稱：${esc(company.name)}<br>保險證字號：${esc(company.insuranceNo)}　投保單位電話：${esc(company.phone)}<br>投保單位地址：${esc(company.address)}<br><br>本表所記載資料內容，業經投保單位複核無誤。</td></tr><tr><th>投保單位蓋章</th><td style="height:80px"></td></tr></table>`}
+const OFFICIAL_REASON_OPTIONS=['關廠','遷廠','休業','解散','受破產宣告','勞動基準法第11條第1款','勞動基準法第11條第2款','勞動基準法第11條第3款','勞動基準法第11條第4款','勞動基準法第11條第5款','勞動基準法第14條第1款','勞動基準法第14條第2款','勞動基準法第14條第3款','勞動基準法第14條第4款','勞動基準法第14條第5款','勞動基準法第14條第6款','勞動基準法第13條但書','勞動基準法第20條','定期契約工作期滿','自願離職','其他'];
+function installOfficialReasonOptions(){
+  const select=form.elements.legalBasis;
+  select.innerHTML='<option value="">請選擇</option>'+OFFICIAL_REASON_OPTIONS.map(value=>`<option value="${value}">${value}</option>`).join('');
+}
+function officialReasonKey(value=''){
+  if(value==='關廠')return'closure';
+  if(value==='遷廠')return'relocation';
+  if(value==='休業')return'suspension';
+  if(value==='解散')return'dissolution';
+  if(value==='受破產宣告')return'bankruptcy';
+  if(value==='定期契約工作期滿')return'fixed-term';
+  if(value==='自願離職')return'voluntary';
+  if(value==='其他')return'other';
+  const article=value.match(/第\s*(11|14)\s*條第\s*([1-6])\s*款/);
+  if(article)return`lsa-${article[1]}-${article[2]}`;
+  if(/第\s*13\s*條/.test(value))return'lsa-13';
+  if(/第\s*20\s*條/.test(value))return'lsa-20';
+  return'';
+}
+function officialInvoluntaryPdf(c){
+  const company=COMPANIES[c.fd.companyKey],work=WORKPLACES[c.fd.workplaceRegion];
+  const reason=officialReasonKey(c.fd.legalBasis);
+  const field=(className,value)=>`<span class="official-field ${className}">${esc(value)}</span>`;
+  const mark=key=>reason===key?`<span class="official-check check-${key}">✓</span>`:'';
+  const dateParts=value=>{
+    const d=typeof value==='string'?date(value):value;
+    return d?`${d.getFullYear()-1911} 年 ${String(d.getMonth()+1).padStart(2,'0')} 月 ${String(d.getDate()).padStart(2,'0')} 日`:'';
+  };
+  return `<div class="official-form-document">
+    <section class="official-page official-page-one">
+      <img src="templates/involuntary-form-page-1.png" alt="非自願離職證明書第一頁公版">
+      ${field('field-issue-date',dateParts(new Date()))}
+      ${field('field-name',c.fd.employeeName)}
+      ${field('field-birth-date',dateParts(c.fd.birthDate))}
+      <span class="official-gender gender-male ${c.fd.gender==='female'?'':'selected'}">□</span>
+      <span class="official-gender gender-female ${c.fd.gender==='female'?'selected':''}">□</span>
+      ${field('field-id',c.fd.employeeId)}
+      ${field('field-address',c.fd.employeeAddress)}
+      ${field('field-phone',c.fd.employeePhone)}
+      ${field('field-end-date',dateParts(c.end))}
+      ${field('field-workplace',work?.label||c.fd.workplace||'')}
+      ${mark('closure')}${mark('relocation')}${mark('suspension')}${mark('dissolution')}${mark('bankruptcy')}
+      ${mark('lsa-11-1')}${mark('lsa-11-2')}${mark('lsa-11-3')}${mark('lsa-11-4')}${mark('lsa-11-5')}
+      ${mark('lsa-14-1')}${mark('lsa-14-2')}${mark('lsa-14-3')}${mark('lsa-14-4')}${mark('lsa-14-5')}${mark('lsa-14-6')}
+      ${mark('lsa-13')}${mark('lsa-20')}${mark('fixed-term')}${mark('voluntary')}${mark('other')}
+      ${reason==='other'?field('field-other-reason',c.fd.reasonDetail):''}
+      ${field('field-insurance-no',company.insuranceNo)}
+      ${field('field-unit-phone','02-2208-2928#256、213')}
+      ${field('field-unit-address',company.address)}
+      ${field('field-contact-phone','02-2208-2928#256、213')}
+    </section>
+    <section class="official-page official-page-two">
+      <img src="templates/involuntary-form-page-2.png" alt="非自願離職證明書第二頁法規全文">
+    </section>
+  </div>`;
+}
+installOfficialReasonOptions();
+involuntaryPdf=officialInvoluntaryPdf;
 let previewZoomed=false;
 function fitDocumentPreview(){const preview=document.querySelector('#documentPreview'),dialog=document.querySelector('#documentDialog');if(!dialog.open)return;preview.style.setProperty('--preview-scale','1');const available=Math.max(280,dialog.clientWidth-24),paperWidth=preview.getBoundingClientRect().width,fit=Math.min(1,available/paperWidth),scale=previewZoomed&&innerWidth<=760?Math.min(1,Math.max(.72,fit)):fit;preview.style.setProperty('--preview-scale',String(scale));document.querySelector('#togglePreviewZoom').textContent=previewZoomed?'符合寬度':'放大閱讀';dialog.classList.toggle('preview-zoomed',previewZoomed)}
 document.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>{if(!latest)return;previewZoomed=false;const type=b.dataset.doc,titles={notice:'資遣通知書',average:'平均工資計算明細',service:'離職證明單',involuntary:'非自願離職證明書'};document.querySelector('#dialogTitle').textContent=`${titles[type]}－列印／另存 PDF`;document.querySelector('#documentPreview').innerHTML=type==='notice'?noticePdf(latest):type==='average'?averagePdf(latest):type==='service'?servicePdf(latest):involuntaryPdf(latest);document.querySelector('#documentDialog').showModal();requestAnimationFrame(fitDocumentPreview)});
