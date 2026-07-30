@@ -13,13 +13,17 @@ html,body{max-width:100%;overflow-x:hidden}
   .dialogbar>div{flex-shrink:0;flex-wrap:nowrap}
   .dialogbar button{padding:8px 10px;white-space:nowrap}
   #documentPreview{margin:0 auto}
+  dialog#documentDialog.preview-zoomed #documentPreview{margin-left:12px;margin-right:12px}
+  #togglePreviewZoom{display:block}
 }
 @media(max-width:420px){
   .row-actions,.actions{grid-template-columns:1fr}
   .dialogbar{align-items:stretch;flex-direction:column}
   .dialogbar>div{display:grid;grid-template-columns:1fr 1fr}
+  .dialogbar #togglePreviewZoom{grid-column:1/-1}
 }
 @media print{
   html,body{overflow:visible}
   #documentPreview{--preview-scale:1!important;zoom:1!important}
 }
+@media(min-width:761px){#togglePreviewZoom{display:none}}
