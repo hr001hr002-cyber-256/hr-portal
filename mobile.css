@@ -24,6 +24,7 @@ html,body{max-width:100%;overflow-x:hidden}
 }
 @media print{
   html,body{overflow:visible}
+  dialog#documentDialog{position:static!important;inset:auto!important;width:auto!important;height:auto!important;max-width:none!important;max-height:none!important;margin:0!important;border-radius:0!important;overflow:visible!important}
   #documentPreview{--preview-scale:1!important;zoom:1!important}
 }
 @media(min-width:761px){#togglePreviewZoom{display:none}}
