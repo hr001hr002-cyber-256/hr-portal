@@ -184,22 +184,22 @@ function officialInvoluntaryPdf(c){
   const reason=officialReasonKey(c.fd.legalBasis);
   const field=(className,value)=>`<span class="official-field ${className}">${esc(value)}</span>`;
   const mark=key=>reason===key?`<span class="official-check check-${key}">✓</span>`:'';
-  const dateParts=value=>{
+  const dateField=(className,value)=>{
     const d=typeof value==='string'?date(value):value;
-    return d?`${d.getFullYear()-1911}　　${String(d.getMonth()+1).padStart(2,'0')}　　${String(d.getDate()).padStart(2,'0')}`:'';
+    return d?`<span class="official-date ${className}"><i class="date-year">${d.getFullYear()-1911}</i><i class="date-month">${String(d.getMonth()+1).padStart(2,'0')}</i><i class="date-day">${String(d.getDate()).padStart(2,'0')}</i></span>`:'';
   };
   return `<div class="official-form-document">
     <section class="official-page official-page-one">
       <img src="templates/involuntary-form-page-1.png" alt="非自願離職證明書第一頁公版">
-      ${field('field-issue-date',dateParts(new Date()))}
+      ${dateField('field-issue-date',new Date())}
       ${field('field-name',c.fd.employeeName)}
-      ${field('field-birth-date',dateParts(c.fd.birthDate))}
-      <span class="official-gender gender-male ${c.fd.gender==='female'?'':'selected'}">□男</span>
-      <span class="official-gender gender-female ${c.fd.gender==='female'?'selected':''}">□女</span>
+      ${dateField('field-birth-date',c.fd.birthDate)}
+      <span class="official-gender gender-male ${c.fd.gender==='female'?'':'selected'}"><i></i>男</span>
+      <span class="official-gender gender-female ${c.fd.gender==='female'?'selected':''}"><i></i>女</span>
       ${field('field-id',c.fd.employeeId)}
       ${field('field-address',c.fd.employeeAddress)}
       ${field('field-phone',c.fd.employeePhone)}
-      ${field('field-end-date',dateParts(c.end))}
+      ${dateField('field-end-date',c.end)}
       ${field('field-workplace',work?.label||c.fd.workplace||'')}
       ${mark('closure')}${mark('relocation')}${mark('suspension')}${mark('dissolution')}${mark('bankruptcy')}
       ${mark('lsa-11-1')}${mark('lsa-11-2')}${mark('lsa-11-3')}${mark('lsa-11-4')}${mark('lsa-11-5')}
