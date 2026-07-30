@@ -1,6 +1,15 @@
-.wage-head,.wage-row{grid-template-columns:1.1fr 1fr .85fr .85fr .85fr 1fr 1fr 40px}
+.wage-head,.wage-row{grid-template-columns:1.1fr 1fr .85fr .85fr .85fr 1fr 1fr 44px}
+.wage-field{display:block;min-width:0}
+.wage-field span{display:none}
+.wage-field input{width:100%;min-width:0}
 .net-wage{background:#edf4f1!important;color:#21483d!important;font-weight:700}
-@media(max-width:760px){.wage-row{grid-template-columns:1fr 1fr}.wage-row input:first-child{grid-column:1/-1}}
+@media(max-width:760px){
+  .wage-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px;gap:10px;padding:14px;margin-bottom:14px;border:1px solid #d9dfdc;border-radius:12px;background:#f8faf9}
+  .wage-field{grid-column:span 1;font-size:13px;gap:4px}
+  .wage-field span{display:block;color:#56605b;font-weight:700}
+  .wage-field:first-child,.wage-field:nth-child(7){grid-column:1/-2}
+  .wage-row .remove{grid-column:3;grid-row:1;align-self:end;width:42px;height:44px;border:1px solid #e0caca;border-radius:9px;background:#fff4f4}
+}
 .paper{width:210mm;min-height:297mm;margin:auto;padding:15mm!important;color:#111;font-family:"Microsoft JhengHei",sans-serif}
 .paper .doc-title{text-align:center;font-size:24px;letter-spacing:.18em;margin:0 0 16px}.paper .doc-subtitle{text-align:center;font-size:19px;margin:0 0 14px}.paper .doc-table{width:100%;border-collapse:collapse}.paper .doc-table th,.paper .doc-table td{border:1px solid #222;padding:7px 8px;vertical-align:middle}.paper .doc-table th{background:#f3f3f3;text-align:center}.paper .doc-note{font-size:12px;line-height:1.45}.paper .company-block{margin-top:24px;line-height:2}.paper .signature-line{display:flex;justify-content:space-between;gap:30px;margin-top:28px}.paper .checkboxes{white-space:pre-line;line-height:1.8}.paper .wage-detail th,.paper .wage-detail td{text-align:center;font-size:12px;padding:5px}.paper .right{text-align:right!important}
 @media(max-width:760px){dialog{width:100vw}.paper{width:210mm;transform-origin:top left}}

@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="wage.css">
   <link rel="stylesheet" href="doc-layout.css">
+  <link rel="stylesheet" href="mobile.css">
 </head>
 <body>
   <header><div class="shell brand"><b>SOBER HR Tools</b><span>資料只在本頁即時計算，不會儲存或上傳</span></div></header>
@@ -39,8 +40,8 @@
         <label>退休金制度<select name="pensionSystem"><option value="new">全部新制</option><option value="old">全部舊制</option><option value="mixed">新舊制並存</option></select></label><label id="transitionField" hidden>轉換新制日期<input name="transitionDate" type="date" value="2005-07-01"></label>
       </div><p class="warning">本工具協助試算與套版，不會判斷個案資遣是否合法；特殊保護身分、排除期間及爭議工資項目請另行確認。</p></section>
 
-      <section class="card"><h2><i>04</i> 平均工資資料</h2><p class="hint">每月應領工資＝原工資－未足月扣款－事假扣款－遲到扣款－其他排除工資。未足月與事假一律以原工資÷30計算；遲到扣款以原工資÷30÷8÷60×遲到分鐘數計算。未足月天數、事假天數及遲到分鐘輸入值與各項扣款小數均無條件捨去。</p>
-        <div class="wage-head"><span>年／月</span><span>原工資</span><span>未足月天數</span><span>事假天數</span><span>遲到分鐘</span><span>其他排除</span><span>應領工資</span><span></span></div><div id="wageRows"></div>
+      <section class="card"><h2><i>04</i> 平均工資資料</h2><p class="hint">每月應領工資＝原工資－未足月扣款－事假扣款－遲到扣款－其他排除工資。未足月以原工資÷30計算；事假 1 天以 8 小時計，未滿 1 天按實際時數，以原工資÷30÷8×事假時數計算；遲到扣款以原工資÷30÷8÷60×遲到分鐘數計算。各項扣款小數均無條件捨去。</p>
+        <div class="wage-head"><span>年／月</span><span>原工資</span><span>未足月天數</span><span>事假時數</span><span>遲到分鐘</span><span>其他排除</span><span>應領工資</span><span></span></div><div id="wageRows"></div>
         <div class="row-actions"><button type="button" class="ghost" id="addWageRow">＋新增一列</button><button type="button" class="ghost" id="fillSixMonths">建立最近六個月</button></div>
         <div class="grid"><label>最近一個月正常工資（選填）<input name="lastMonthlySalary" type="number" min="0"></label><label>月平均工資覆核值（選填）<input name="averageWageOverride" type="number" min="0" step="0.01"></label></div>
       </section>
