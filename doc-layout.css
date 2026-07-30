@@ -19,6 +19,10 @@
 .paper .severance-total{display:flex;align-items:center;justify-content:space-between;margin:10px 0;padding:10px 14px;border:2px solid #294f43;background:#e9f0ed;color:#173f34}
 .paper .severance-total span{font-size:15px;font-weight:700;letter-spacing:.06em}
 .paper .severance-total strong{font-size:22px;line-height:1.2}
+.paper .final-payment{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px 16px;margin:10px 0;padding:10px 14px;border:2px solid #173f34;background:#294f43;color:#fff}
+.paper .final-payment span{font-size:15px;font-weight:700;letter-spacing:.06em}
+.paper .final-payment strong{font-size:22px;line-height:1.2}
+.paper .final-payment small{grid-column:1/-1;text-align:right;color:#d7e4df}
 .paper .notice-summary{margin-top:10px;border:1px solid #8b9792}
 .paper .notice-summary h3{margin:0;padding:6px 10px;background:#dfe9e5;color:#173f34;font-size:14px}
 .paper .notice-summary dl{display:grid;grid-template-columns:1fr 1fr;margin:0}
