@@ -15,6 +15,7 @@
 .paper .average-heading .doc-title{font-size:22px;line-height:1.3;margin:0;letter-spacing:.15em}
 .paper .average-wages{margin-top:12px}
 .paper .average-formula{margin:12px 0 10px;padding:9px 11px;font-size:13px;line-height:1.65}
+.paper .average-formula .doc-note,.paper .average-formula br:last-of-type{display:none}
 .paper .severance-total{display:flex;align-items:center;justify-content:space-between;margin:10px 0;padding:10px 14px;border:2px solid #294f43;background:#e9f0ed;color:#173f34}
 .paper .severance-total span{font-size:15px;font-weight:700;letter-spacing:.06em}
 .paper .severance-total strong{font-size:22px;line-height:1.2}
