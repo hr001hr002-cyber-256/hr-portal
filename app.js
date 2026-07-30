@@ -23,8 +23,8 @@ const xmlEsc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'
 const date=v=>{if(!v)return null;if(v instanceof Date)return new Date(v);const text=String(v).trim();let m=text.match(/^(\d{6,8})$/);if(m){const digits=m[1],prefix=+digits.slice(0,-4),month=+digits.slice(-4,-2),day=+digits.slice(-2),year=digits.length===8&&prefix>=1911?prefix:prefix+1911,d=new Date(year,month-1,day,12);return d.getFullYear()===year&&d.getMonth()===month-1&&d.getDate()===day?d:null}m=text.match(/^(?:民國\s*)?(\d{2,3})\s*[年\/.-]\s*(\d{1,2})\s*[月\/.-]\s*(\d{1,2})\s*日?$/);if(m){const year=+m[1]+1911,d=new Date(year,+m[2]-1,+m[3],12);return d.getFullYear()===year&&d.getMonth()===+m[2]-1&&d.getDate()===+m[3]?d:null}m=text.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m){const d=new Date(+m[1],+m[2]-1,+m[3],12);return d.getFullYear()===+m[1]&&d.getMonth()===+m[2]-1&&d.getDate()===+m[3]?d:null}return null};
 const plus=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const days=(a,b)=>Math.max(0,Math.round((b-a)/86400000));
-const ymd=v=>{const d=typeof v==='string'?date(v):v;return d?`民國${d.getFullYear()-1911}年${String(d.getMonth()+1).padStart(2,'0')}月${String(d.getDate()).padStart(2,'0')}日`:'—'};
-const roc=v=>ymd(v)==='—'?'':ymd(v);
+const ymd=v=>{const d=typeof v==='string'?date(v):v;return d?`${d.getFullYear()-1911}年${String(d.getMonth()+1).padStart(2,'0')}月${String(d.getDate()).padStart(2,'0')}日`:'—'};
+const roc=v=>{const d=typeof v==='string'?date(v):v;return d?`民國${d.getFullYear()-1911}年${String(d.getMonth()+1).padStart(2,'0')}月${String(d.getDate()).padStart(2,'0')}日`:''};
 const rocLong=roc;
 function diffYmd(start,end){const stop=plus(end,1);let y=stop.getFullYear()-start.getFullYear(),cur=new Date(start);cur.setFullYear(cur.getFullYear()+y);if(cur>stop){y--;cur=new Date(start);cur.setFullYear(cur.getFullYear()+y)}let m=0;while(m<11){const n=new Date(cur);n.setMonth(n.getMonth()+1);if(n>stop)break;cur=n;m++}return{years:y,months:m,days:days(cur,stop),totalDays:days(start,end)+1}}
 const duration=d=>`${d.years}年${d.months}月${d.days}日`;
