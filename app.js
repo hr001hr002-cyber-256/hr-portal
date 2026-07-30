@@ -64,15 +64,15 @@ function calculate(){
   const completedMonths=tenure.years*12+tenure.months+(tenure.days?tenure.days/31:0);
   const noticeDays=noticeApplies?(completedMonths>=36?30:completedMonths>=12?20:completedMonths>=3?10:0):0;
   const latestNormalWage=sortedWages[0]?.original||0,noticeMonthly=Math.max(monthly,latestNormalWage),noticeDaily=noticeMonthly/30;
-  const latestNotice=noticeDays?plus(end,-noticeDays):null,actual=date(fd.actualNoticeDate),actualDays=actual?days(actual,end):0,shortNotice=Math.max(0,noticeDays-actualDays),noticePay=noticeDays*noticeDaily;
+  const latestNotice=noticeDays?plus(end,-noticeDays):null,actual=date(fd.actualNoticeDate),displayNoticeDate=actual||latestNotice,actualDays=actual?days(actual,end):0,shortNotice=Math.max(0,noticeDays-actualDays),noticePay=noticeDays*noticeDaily;
   const parts=tenureParts(start,end,fd.pensionSystem,date(fd.transitionDate)),newUnits=Math.min(parts.newPart.basis*.5,6),oldUnits=parts.oldPart.basis,severanceRaw=monthly*(newUnits+oldUnits),severance=Math.ceil(severanceRaw);
-  return{fd,start,end,tenure,wages,averageWages,totalNet,fullSix,daily,monthly,latestNormalWage,noticeMonthly,noticeDays,latestNotice,actualDays,shortNotice,noticeDaily,noticePay,parts,newUnits,oldUnits,severance};
+  return{fd,start,end,tenure,wages,averageWages,totalNet,fullSix,daily,monthly,latestNormalWage,noticeMonthly,noticeDays,latestNotice,displayNoticeDate,actualDays,shortNotice,noticeDaily,noticePay,parts,newUnits,oldUnits,severance};
 }
 function render(c){
   latest=c;results.hidden=false;
   document.querySelector('#noticeDays').textContent=`${c.noticeDays} 天`;
   document.querySelector('#noticeDetail').textContent=c.noticeDays?(c.shortNotice?`實際預告 ${c.actualDays} 天，不足 ${c.shortNotice} 天`:'已足法定預告期'):'此法源不適用預告期，顯示 0 天';
-  document.querySelector('#latestNotice').textContent=c.latestNotice?ymd(c.latestNotice):'無';
+  document.querySelector('#latestNotice').textContent=c.displayNoticeDate?ymd(c.displayNoticeDate):'無';
   document.querySelector('#averageMonthly').textContent=money.format(c.monthly);
   document.querySelector('#averageDetail').textContent=`最近 ${c.averageWages.length} 個月應領合計 ${money.format(c.totalNet)}；總年資 ${c.tenure.totalDays} 日`;
   document.querySelector('#severancePay').textContent=money.format(c.severance);
@@ -90,7 +90,7 @@ async function downloadExcel(c){
   try{
     const res=await fetch('templates/資遣通知書-現版.xlsx');if(!res.ok)throw Error('找不到 Excel 範本');const zip=await JSZip.loadAsync(await res.arrayBuffer());
     const company=COMPANIES[c.fd.companyKey];
-    const common={'B1':`${company.name}\n員工資遣通知書`,'C3':c.fd.employeeName,'G3':c.fd.employeeId,'C4':c.fd.employeeAddress,'G4':c.fd.employeePhone,'C5':c.fd.department,'E5':c.fd.jobTitle,'G5':`${c.noticeDays}日`,'G6':c.latestNotice?roc(c.latestNotice):'無','C7':'□免職','G7':roc(c.fd.settlementDate),'C8':`■${c.fd.legalBasis}`,'G8':c.fd.reasonDetail,'C10':roc(c.start),'G10':String(c.tenure.totalDays),'C11':roc(c.end),'G11':String(Math.round(c.monthly)),'C12':String(Math.round(c.severance))};
+    const common={'B1':`${company.name}\n員工資遣通知書`,'C3':c.fd.employeeName,'G3':c.fd.employeeId,'C4':c.fd.employeeAddress,'G4':c.fd.employeePhone,'C5':c.fd.department,'E5':c.fd.jobTitle,'G5':`${c.noticeDays}日`,'G6':c.displayNoticeDate?roc(c.displayNoticeDate):'無','C7':'□免職','G7':roc(c.fd.settlementDate),'C8':`■${c.fd.legalBasis}`,'G8':c.fd.reasonDetail,'C10':roc(c.start),'G10':String(c.tenure.totalDays),'C11':roc(c.end),'G11':String(Math.round(c.monthly)),'C12':String(Math.round(c.severance))};
     for(const path of ['xl/worksheets/sheet1.xml','xl/worksheets/sheet3.xml']){let xml=await zip.file(path).async('string');for(const [a,v] of Object.entries(common))xml=setCell(xml,a,v);zip.file(path,xml)}
     for(const path of ['xl/worksheets/sheet2.xml','xl/worksheets/sheet4.xml']){let xml=await zip.file(path).async('string');c.wages.slice(0,7).forEach((w,i)=>{const r=i+3,m=w.period.match(/(\d{3,4})\D+(\d{1,2})/);const values={B:m?m[1]:w.period,C:m?m[2]:'',D:Math.round(w.original),G:Math.round(w.original),H:-Math.round(w.partialDeduction),I:Math.round(w.lateMinutes),J:-Math.round(w.lateDeduction),K:w.leaveHours,L:-Math.round(w.leaveDeduction),M:-Math.round(w.otherExclude),N:Math.round(w.net)};for(const [col,val] of Object.entries(values))xml=setCell(xml,`${col}${r}`,val)});xml=setCell(xml,'N10',Math.round(c.totalNet));xml=setCell(xml,'N11',Math.round(c.monthly));zip.file(path,xml)}
     saveBlob(await zip.generateAsync({type:'blob'}),`${c.fd.employeeName}_資遣通知書.xlsx`);

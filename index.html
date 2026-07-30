@@ -36,7 +36,7 @@
         <label>到職日<input name="startDate" type="date" required></label><label>最後工作日／離職日<input name="endDate" type="date" required></label>
         <label class="wide">法源依據<select name="legalBasis" required><option value="">請選擇</option><option>勞動基準法第11條第1款－歇業或轉讓</option><option>勞動基準法第11條第2款－虧損或業務緊縮</option><option>勞動基準法第11條第3款－不可抗力暫停工作逾一個月</option><option>勞動基準法第11條第4款－業務性質變更，有減少勞工必要</option><option>勞動基準法第11條第5款－勞工對所擔任工作確不能勝任</option><option>勞動基準法第13條但書</option><option>勞動基準法第20條－事業單位改組或轉讓</option><option>勞動基準法第14條－勞工不經預告終止契約</option><option value="other">其他（請在理由說明）</option></select></label>
         <label class="wide">資遣理由／事實說明<textarea name="reasonDetail" rows="3" required></textarea></label>
-        <label>實際通知日（沒有可留白）<input name="actualNoticeDate" type="date"></label><label>薪資／資遣費發放日<input name="settlementDate" type="date"></label>
+        <label>實際預告日（沒有可留白）<input name="actualNoticeDate" type="date"></label><label>薪資／資遣費發放日<input name="settlementDate" type="date"></label>
         <label>退休金制度<select name="pensionSystem"><option value="new">全部新制</option><option value="old">全部舊制</option><option value="mixed">新舊制並存</option></select></label><label id="transitionField" hidden>轉換新制日期<input name="transitionDate" type="date" value="2005-07-01"></label>
       </div><p class="warning">本工具協助試算與套版，不會判斷個案資遣是否合法；特殊保護身分、排除期間及爭議工資項目請另行確認。</p></section>
 
@@ -50,7 +50,7 @@
 
     <section id="results" class="card results" hidden><h2>計算結果</h2><div class="metrics">
       <article><small>法定預告天數</small><strong id="noticeDays">0 天</strong><p id="noticeDetail"></p></article>
-      <article><small>最晚預告日</small><strong id="latestNotice">—</strong><p>以離職日前一日開始逆算。</p></article>
+      <article><small>預告日期</small><strong id="latestNotice">—</strong><p>優先顯示實際預告日；未填時顯示仍可符合期限的最晚預告日。</p></article>
       <article><small>月平均工資</small><strong id="averageMonthly">NT$0</strong><p id="averageDetail"></p></article>
       <article class="accent"><small>資遣費</small><strong id="severancePay">NT$0</strong><p id="severanceDetail"></p></article>
     </div><div id="calculationSheet" class="details"></div>
