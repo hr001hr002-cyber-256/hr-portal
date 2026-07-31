@@ -2,17 +2,17 @@
   "use strict";
 
   const companies = {
-    sober: { name: "搜博科技股份有限公司", taxId: "29035099", logo: "assets/logos/sober.jpg", defaultLocation: "taipei" },
-    maya: { name: "馬雅科技股份有限公司", taxId: "96784466", logo: "assets/logos/maya.png", defaultLocation: "taipei" },
+    sober: { name: "搜博科技股份有限公司", taxId: "29035099", logo: "assets/logos/sober.jpg", defaultLocation: "taipei", centeredLogo: false },
+    maya: { name: "馬雅科技股份有限公司", taxId: "96784466", logo: "assets/logos/maya.png", defaultLocation: "taipei", centeredLogo: true },
     ideas: { name: "創思影像有限公司", taxId: "83116175", logo: "assets/logos/ideas.jpg", defaultLocation: "tainan" },
     show: { name: "搜秀網路行銷有限公司", taxId: "53484399", logo: "assets/logos/soshow.jpg", defaultLocation: "taichung" },
     create: { name: "搜創網路行銷有限公司", taxId: "91105931", logo: "assets/logos/socreative.jpg", defaultLocation: "kaohsiung" }
   };
   const locations = {
-    taipei: "新北市中和區中正路866號17樓（搜博科技）",
-    tainan: "台南市中西區府前路二段281號3樓之2（創思影像）",
-    taichung: "台中市北屯區崇德路二段256號14樓A1（搜秀網路行銷）",
-    kaohsiung: "高雄市苓雅區新光路38號20樓之5（搜創網路行銷）"
+    taipei: { address: "新北市中和區中正路866號17樓", company: "搜博科技" },
+    tainan: { address: "台南市中西區府前路二段281號3樓之2", company: "創思影像" },
+    taichung: { address: "台中市北屯區崇德路二段256號14樓A1", company: "搜秀網路行銷" },
+    kaohsiung: { address: "高雄市苓雅區新光路38號20樓之5", company: "搜創網路行銷" }
   };
 
   const $ = (id) => document.getElementById(id);
@@ -55,6 +55,7 @@
     const version = form.querySelector('input[name="version"]:checked').value;
     $("companyLogo").src = company.logo;
     $("companyLogo").alt = `${company.name} Logo`;
+    $("companyLogo").classList.toggle("company-logo--centered", company.centeredLogo === true);
     text("closingCompany", company.name);
     text("outName", $("candidateName").value, "求職者姓名");
     text("outSalutation", $("salutation").value);
@@ -63,7 +64,12 @@
     text("outSalary", `${formatMoney($("salary").value)}（內含全勤 1,000 元）`);
     text("outStartDate", formatDate($("startDate").value));
     text("outStartTime", formatTime($("startTime").value));
-    text("outLocation", locations[$("location").value]);
+    const selectedLocation = $("location").value;
+    const location = locations[selectedLocation];
+    const locationText = location
+      ? `${location.address}${selectedLocation !== company.defaultLocation ? `（${location.company}）` : ""}`
+      : "";
+    text("outLocation", locationText);
     text("outDocumentDate", formatDate($("documentDate").value));
     text("outTaxId", company.taxId);
     $("generalTerms").hidden = version === "sales";
