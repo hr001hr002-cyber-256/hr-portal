@@ -1,0 +1,35 @@
+.brand-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.home-link {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border: 1px solid #80928a;
+  border-radius: 8px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.home-link:hover,
+.home-link:focus-visible {
+  border-color: #fff;
+  color: #202724;
+  background: #fff;
+  outline: none;
+}
+
+@media (max-width: 760px) {
+  .brand-actions {
+    width: 100%;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+}
