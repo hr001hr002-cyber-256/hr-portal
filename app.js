@@ -127,7 +127,7 @@ function setCell(xml,address,value){const doc=new DOMParser().parseFromString(xm
 function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 async function downloadExcel(c){
   try{
-    const res=await fetch('templates/資遣通知書-現版.xlsx');if(!res.ok)throw Error('找不到 Excel 範本');const zip=await JSZip.loadAsync(await res.arrayBuffer());
+    const res=await fetch('../templates/資遣通知書-現版.xlsx');if(!res.ok)throw Error('找不到 Excel 範本');const zip=await JSZip.loadAsync(await res.arrayBuffer());
     const company=COMPANIES[c.fd.companyKey];
     const common={'B1':`${company.name}\n員工資遣通知書`,'C3':c.fd.employeeName,'G3':c.fd.employeeId,'C4':c.fd.employeeAddress,'G4':c.fd.employeePhone,'C5':c.fd.department,'E5':c.fd.jobTitle,'G5':`${c.noticeDays}日`,'G6':c.displayNoticeDate?roc(c.displayNoticeDate):'無','C7':'□免職','G7':roc(c.fd.settlementDate),'C8':`■${c.fd.legalBasis}`,'G8':c.fd.reasonDetail,'C10':roc(c.start),'G10':String(c.tenure.totalDays),'C11':roc(c.end),'G11':String(Math.round(c.monthly)),'C12':String(Math.round(c.severance))};
     for(const path of ['xl/worksheets/sheet1.xml','xl/worksheets/sheet3.xml']){let xml=await zip.file(path).async('string');for(const [a,v] of Object.entries(common))xml=setCell(xml,a,v);zip.file(path,xml)}
@@ -139,7 +139,7 @@ function legalCheckboxes(value){const opts=['勞動基準法第11條第1款－�
 function tokenXml(value){return xmlEsc(value).replace(/\r?\n/g,'</w:t><w:br/><w:t xml:space="preserve">')}
 async function downloadDocx(type,c){
   try{
-    const isService=type==='service',file=isService?'離職證明單-範本.docx':'非自願離職證明書-範本.docx',res=await fetch(`templates/${file}`);if(!res.ok)throw Error('找不到 Word 範本');const zip=await JSZip.loadAsync(await res.arrayBuffer());let xml=await zip.file('word/document.xml').async('string');const company=COMPANIES[c.fd.companyKey],work=WORKPLACES[c.fd.workplaceRegion];
+    const isService=type==='service',file=isService?'離職證明單-範本.docx':'非自願離職證明書-範本.docx',res=await fetch(`../templates/${file}`);if(!res.ok)throw Error('找不到 Word 範本');const zip=await JSZip.loadAsync(await res.arrayBuffer());let xml=await zip.file('word/document.xml').async('string');const company=COMPANIES[c.fd.companyKey],work=WORKPLACES[c.fd.workplaceRegion];
     const id=(c.fd.employeeId||'').padEnd(10,' '),tokens=isService?{
       EMPLOYEE_NAME:c.fd.employeeName,BIRTH_DATE:rocLong(c.fd.birthDate),GENDER:c.fd.gender==='female'?'女':'男',EMPLOYEE_ID:c.fd.employeeId,DEPARTMENT:c.fd.department,JOB_TITLE:c.fd.jobTitle,START_DATE:rocLong(c.start),END_DATE:rocLong(c.end),COMPANY_NAME:company.name,COMPANY_ID:company.id,WORKPLACE_ADDRESS:c.fd.workplace,REPRESENTATIVE:company.representative,COMPANY_PHONE:company.phone,ISSUE_DATE:rocLong(new Date())
     }:{
@@ -194,7 +194,7 @@ function officialInvoluntaryPdf(c){
   };
   return `<div class="official-form-document">
     <section class="official-page official-page-one">
-      <img src="templates/involuntary-form-page-1.png" alt="非自願離職證明書第一頁公版">
+      <img src="../templates/involuntary-form-page-1.png" alt="非自願離職證明書第一頁公版">
       ${dateField('field-issue-date',new Date())}
       ${field('field-name',c.fd.employeeName)}
       ${dateField('field-birth-date',c.fd.birthDate)}
@@ -217,7 +217,7 @@ function officialInvoluntaryPdf(c){
       ${field('field-contact-phone','02-2208-2928#256、213')}
     </section>
     <section class="official-page official-page-two">
-      <img src="templates/involuntary-form-page-2.png" alt="非自願離職證明書第二頁法規全文">
+      <img src="../templates/involuntary-form-page-2.png" alt="非自願離職證明書第二頁法規全文">
     </section>
   </div>`;
 }
