@@ -2,11 +2,11 @@
   "use strict";
 
   const companies = {
-    sober: { name: "搜博科技股份有限公司", taxId: "29035099", mark: "SOBER", sub: "SOBER TECHNOLOGY", color: "#203b34" },
-    maya: { name: "馬雅科技股份有限公司", taxId: "96784466", mark: "MAYA", sub: "MAYA TECHNOLOGY", color: "#334e5c" },
-    ideas: { name: "創思影像有限公司", taxId: "83116175", mark: "IDEAS", sub: "CREATIVE IMAGING", color: "#4f5149" },
-    show: { name: "搜秀網路行銷有限公司", taxId: "53484399", mark: "SHOW", sub: "DIGITAL MARKETING", color: "#315d50" },
-    create: { name: "搜創網路行銷有限公司", taxId: "91105931", mark: "CREATE", sub: "DIGITAL MARKETING", color: "#3d554b" }
+    sober: { name: "搜博科技股份有限公司", taxId: "29035099", logo: "assets/logos/sober.jpg", defaultLocation: "taipei" },
+    maya: { name: "馬雅科技股份有限公司", taxId: "96784466", logo: "assets/logos/maya.png", defaultLocation: "taipei" },
+    ideas: { name: "創思影像有限公司", taxId: "83116175", logo: "assets/logos/ideas.jpg", defaultLocation: "tainan" },
+    show: { name: "搜秀網路行銷有限公司", taxId: "53484399", logo: "assets/logos/soshow.jpg", defaultLocation: "taichung" },
+    create: { name: "搜創網路行銷有限公司", taxId: "91105931", logo: "assets/logos/socreative.jpg", defaultLocation: "kaohsiung" }
   };
   const locations = {
     taipei: "新北市中和區中正路866號17樓（搜博科技）",
@@ -17,6 +17,7 @@
 
   const $ = (id) => document.getElementById(id);
   const form = $("appointmentForm");
+  let locationManuallyChanged = false;
   const today = new Date();
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   $("documentDate").value = localToday;
@@ -52,10 +53,8 @@
   function render() {
     const company = companies[$("company").value];
     const version = form.querySelector('input[name="version"]:checked').value;
-    text("companyMark", company.mark);
-    $("companyMark").style.backgroundColor = company.color;
-    text("companyName", company.name);
-    text("companySub", company.sub);
+    $("companyLogo").src = company.logo;
+    $("companyLogo").alt = `${company.name} Logo`;
     text("closingCompany", company.name);
     text("outName", $("candidateName").value, "求職者姓名");
     text("outSalutation", $("salutation").value);
@@ -80,6 +79,14 @@
 
   form.addEventListener("input", render);
   form.addEventListener("change", render);
+  $("company").addEventListener("change", () => {
+    if (!locationManuallyChanged) $("location").value = companies[$("company").value].defaultLocation;
+    render();
+  });
+  $("location").addEventListener("change", () => {
+    locationManuallyChanged = true;
+    render();
+  });
   $("startDateRoc").addEventListener("input", () => {
     const iso = rocToIso($("startDateRoc").value);
     if (iso) $("startDate").value = iso;
@@ -90,10 +97,17 @@
     render();
   });
   form.addEventListener("reset", () => {
-    setTimeout(() => { $("documentDate").value = localToday; $("startTime").value = "09:00"; render(); }, 0);
+    setTimeout(() => {
+      locationManuallyChanged = false;
+      $("documentDate").value = localToday;
+      $("startTime").value = "09:00";
+      $("location").value = companies[$("company").value].defaultLocation;
+      render();
+    }, 0);
   });
   $("printButton").addEventListener("click", () => printDocument(false));
   $("pdfButton").addEventListener("click", () => printDocument(true));
   window.addEventListener("afterprint", () => { $("pdfHint").hidden = true; });
+  $("location").value = companies[$("company").value].defaultLocation;
   render();
 })();
