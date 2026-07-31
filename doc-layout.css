@@ -2,6 +2,8 @@
 .paper .paired-form col.label{width:18%}
 .paper .paired-form col.value{width:32%}
 .paper .paired-form th,.paper .paired-form td{height:38px}
+.paper .paired-form .notice-address-row th,.paper .paired-form .notice-address-row td{height:auto;min-height:38px}
+.paper .paired-form .notice-address{padding:7px 10px;line-height:1.45;overflow-wrap:anywhere;word-break:break-word}
 .paper .section-row th{background:#dfe9e5!important;color:#173f34;text-align:left!important;font-size:16px;padding:7px 10px!important}
 .paper .amount-box{font-size:20px;font-weight:700;text-align:right!important}
 .paper .approval-table{table-layout:fixed;margin-top:18px}
@@ -44,7 +46,16 @@
 .paper .average-heading .doc-subtitle{font-size:17px;line-height:1.35;margin:0 0 5px;letter-spacing:.04em}
 .paper .average-heading .doc-title{font-size:22px;line-height:1.3;margin:0;letter-spacing:.15em}
 .paper .average-wages{margin-top:12px}
-.paper .average-wages th,.paper .average-wages td{font-size:11px;padding:4px}
+.paper .average-wages{table-layout:fixed}
+.paper .average-wages th,.paper .average-wages td{font-size:11px;padding:4px;overflow-wrap:anywhere}
+.paper .average-wages th:nth-child(1),.paper .average-wages td:nth-child(1){width:13%}
+.paper .average-wages th:nth-child(2),.paper .average-wages td:nth-child(2){width:13%}
+.paper .average-wages th:nth-child(3),.paper .average-wages td:nth-child(3){width:10%}
+.paper .average-wages th:nth-child(4),.paper .average-wages td:nth-child(4){width:14%}
+.paper .average-wages th:nth-child(5),.paper .average-wages td:nth-child(5){width:13%}
+.paper .average-wages th:nth-child(6),.paper .average-wages td:nth-child(6){width:12%}
+.paper .average-wages th:nth-child(7),.paper .average-wages td:nth-child(7){width:12%}
+.paper .average-wages th:nth-child(8),.paper .average-wages td:nth-child(8){width:13%}
 .paper .average-formula{margin:12px 0 10px;padding:9px 11px;font-size:13px;line-height:1.65}
 .paper .average-formula .doc-note,.paper .average-formula br:last-of-type{display:none}
 .paper .severance-total{display:flex;align-items:center;justify-content:space-between;margin:10px 0;padding:10px 14px;border:2px solid #294f43;background:#e9f0ed;color:#173f34}
@@ -64,7 +75,7 @@
 .paper .notice-summary dd{text-align:right}
 .paper .approval-three{margin-top:12px;direction:rtl}
 .paper .approval-three th{width:33.333%}
-.paper .approval-three td{height:48px}
+.paper .approval-three td{height:88px}
 .paper:has(.official-form-document){width:210mm;padding:0!important;background:#ddd}
 .paper .official-form-document{width:210mm;margin:0 auto;color:#000;font-family:"DFKai-SB","BiauKai","標楷體",serif;font-size:14px;line-height:1}
 .paper .official-page{position:relative;width:210mm;height:297mm;overflow:hidden;background:#fff}
@@ -77,7 +88,7 @@
 .paper .field-issue-date .date-year{left:71%;top:4.55%;width:7%}.paper .field-issue-date .date-month{left:78%;top:4.55%;width:6%}.paper .field-issue-date .date-day{left:84%;top:4.55%;width:7%}
 .paper .field-issue-date .date-year::after{content:"年";margin-left:5px}.paper .field-issue-date .date-month::after{content:"月";margin-left:5px}.paper .field-issue-date .date-day::after{content:"日";margin-left:5px}
 .paper .field-name{left:18.2%;top:7.35%;width:31%}
-.paper .field-birth-date .date-year{left:73.4%;top:7.7%;width:4.8%}.paper .field-birth-date .date-month{left:79.8%;top:7.7%;width:3.4%}.paper .field-birth-date .date-day{left:85.9%;top:7.7%;width:3.4%}
+.paper .field-birth-date .date-year{left:67.6%;top:7.7%;width:4.8%}.paper .field-birth-date .date-month{left:74%;top:7.7%;width:3.4%}.paper .field-birth-date .date-day{left:80.1%;top:7.7%;width:3.4%}
 .paper .official-gender{left:19.1%;width:6.4%;height:1.75%;gap:3px;padding-left:.2%;background:#fff;font-size:14px;font-family:"DFKai-SB","BiauKai","標楷體",serif}
 .paper .official-gender>i{position:relative;flex:0 0 13px;width:13px;height:13px;border:1px solid #111;background:#fff;font-style:normal}
 .paper .official-gender.selected>i::after{content:"✓";position:absolute;left:0;top:-5px;font:700 17px/1 "DFKai-SB","BiauKai","標楷體",serif}
@@ -85,8 +96,8 @@
 .paper .gender-female{top:12.65%}
 .paper .field-id{left:52.6%;top:10.85%;width:39.3%;height:3.45%;padding-left:1.2%;background:#fff;font-size:16px;letter-spacing:.08em;font-family:"DFKai-SB","BiauKai","標楷體",serif}
 .paper .field-address{left:18.2%;top:14.25%;width:43.6%}
-.paper .field-phone{left:70.7%;top:14.42%;width:21.3%}
-.paper .field-end-date .date-year{left:47.8%;top:18.05%;width:4.8%}.paper .field-end-date .date-month{left:54.6%;top:18.05%;width:3.4%}.paper .field-end-date .date-day{left:61.2%;top:18.05%;width:3.4%}
+.paper .field-phone{left:70.8%;top:14.42%;width:20.7%;height:2.7%;padding-left:.45%;font-size:13px;line-height:1;overflow:hidden}
+.paper .field-end-date .date-year{left:46.9%;top:18.05%;width:4.8%}.paper .field-end-date .date-month{left:54%;top:18.05%;width:3.4%}.paper .field-end-date .date-day{left:59.3%;top:18.05%;width:3.4%}
 .paper .field-workplace{left:76.1%;top:17.7%;width:15.9%;justify-content:center;white-space:normal;text-align:center;font-size:12px;line-height:1.15;background:#fff}
 .paper .official-check{width:1.9%;height:1.55%;font:700 16px/1 "Microsoft JhengHei",sans-serif;background:#fff;justify-content:center}
 .paper .check-closure{left:21.4%;top:23.65%}.paper .check-relocation{left:32.5%;top:23.65%}.paper .check-suspension{left:43.5%;top:23.65%}.paper .check-dissolution{left:54.6%;top:23.65%}.paper .check-bankruptcy{left:65.8%;top:23.65%}
