@@ -2,11 +2,17 @@
   "use strict";
 
   const companies = {
-    sober: { name: "搜博科技股份有限公司", mark: "SOBER", sub: "SOBER TECHNOLOGY", color: "#203b34" },
-    maya: { name: "馬雅科技股份有限公司", mark: "MAYA", sub: "MAYA TECHNOLOGY", color: "#334e5c" },
-    ideas: { name: "創思影像有限公司", mark: "IDEAS", sub: "CREATIVE IMAGING", color: "#4f5149" },
-    show: { name: "搜秀網路行銷有限公司", mark: "SHOW", sub: "DIGITAL MARKETING", color: "#315d50" },
-    create: { name: "搜創網路行銷有限公司", mark: "CREATE", sub: "DIGITAL MARKETING", color: "#3d554b" }
+    sober: { name: "搜博科技股份有限公司", taxId: "29035099", mark: "SOBER", sub: "SOBER TECHNOLOGY", color: "#203b34" },
+    maya: { name: "馬雅科技股份有限公司", taxId: "96784466", mark: "MAYA", sub: "MAYA TECHNOLOGY", color: "#334e5c" },
+    ideas: { name: "創思影像有限公司", taxId: "83116175", mark: "IDEAS", sub: "CREATIVE IMAGING", color: "#4f5149" },
+    show: { name: "搜秀網路行銷有限公司", taxId: "53484399", mark: "SHOW", sub: "DIGITAL MARKETING", color: "#315d50" },
+    create: { name: "搜創網路行銷有限公司", taxId: "91105931", mark: "CREATE", sub: "DIGITAL MARKETING", color: "#3d554b" }
+  };
+  const locations = {
+    taipei: "新北市中和區中正路866號17樓（搜博科技）",
+    tainan: "台南市中西區府前路二段281號3樓之2（創思影像）",
+    taichung: "台中市北屯區崇德路二段256號14樓A1（搜秀網路行銷）",
+    kaohsiung: "高雄市苓雅區新光路38號20樓之5（搜創網路行銷）"
   };
 
   const $ = (id) => document.getElementById(id);
@@ -21,6 +27,21 @@
     if (!value) return "—";
     const [year, month, day] = value.split("-").map(Number);
     return `民國 ${year - 1911} 年 ${month} 月 ${day} 日`;
+  }
+  function rocToIso(value) {
+    const digits = value.replace(/\D/g, "");
+    if (!/^\d{7}$/.test(digits)) return "";
+    const year = Number(digits.slice(0, 3)) + 1911;
+    const month = Number(digits.slice(3, 5));
+    const day = Number(digits.slice(5, 7));
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return "";
+    return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
+  function isoToRoc(value) {
+    if (!value) return "";
+    const [year, month, day] = value.split("-");
+    return `${String(Number(year) - 1911).padStart(3, "0")}${month}${day}`;
   }
   function formatTime(value) {
     if (!value) return "—";
@@ -40,13 +61,15 @@
     text("outSalutation", $("salutation").value);
     text("outDepartment", $("department").value);
     text("outPosition", $("position").value);
-    text("outSalary", formatMoney($("salary").value));
+    text("outSalary", `${formatMoney($("salary").value)}（內含全勤 1,000 元）`);
     text("outStartDate", formatDate($("startDate").value));
     text("outStartTime", formatTime($("startTime").value));
-    text("outLocation", $("location").value);
+    text("outLocation", locations[$("location").value]);
     text("outDocumentDate", formatDate($("documentDate").value));
+    text("outTaxId", company.taxId);
     $("generalTerms").hidden = version === "sales";
     $("salesTerms").hidden = version !== "sales";
+    $("laptopDocument").hidden = version === "general";
   }
 
   function printDocument(showHint) {
@@ -57,6 +80,15 @@
 
   form.addEventListener("input", render);
   form.addEventListener("change", render);
+  $("startDateRoc").addEventListener("input", () => {
+    const iso = rocToIso($("startDateRoc").value);
+    if (iso) $("startDate").value = iso;
+    render();
+  });
+  $("startDate").addEventListener("change", () => {
+    $("startDateRoc").value = isoToRoc($("startDate").value);
+    render();
+  });
   form.addEventListener("reset", () => {
     setTimeout(() => { $("documentDate").value = localToday; $("startTime").value = "09:00"; render(); }, 0);
   });
