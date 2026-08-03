@@ -207,10 +207,13 @@ function installOfficialReasonOptions(){
   });
   form.addEventListener('reset',()=>setTimeout(()=>{previousValue='';lastAutomaticText='';textarea.value=''},0));
 }
-function officialReasonKey(value=''){
-  const aliases={closure:'closure',relocation:'relocation',suspension:'suspension',dissolution:'dissolution',bankruptcy:'bankruptcy','labor-standard-act-13-proviso':'lsa-13','labor-standard-act-20':'lsa-20','fixed-term':'fixed-term',voluntary:'voluntary',other:'other'};
-  return aliases[value]||value.replace('labor-standard-act-','lsa-');
-}
+const OFFICIAL_REASON_MAP={
+  closure:'closure',relocation:'relocation',suspension:'suspension',dissolution:'dissolution',bankruptcy:'bankruptcy',
+  'labor-standard-act-11-1':'lsa-11-1','labor-standard-act-11-2':'lsa-11-2','labor-standard-act-11-3':'lsa-11-3','labor-standard-act-11-4':'lsa-11-4','labor-standard-act-11-5':'lsa-11-5',
+  'labor-standard-act-14-1':'lsa-14-1','labor-standard-act-14-2':'lsa-14-2','labor-standard-act-14-3':'lsa-14-3','labor-standard-act-14-4':'lsa-14-4','labor-standard-act-14-5':'lsa-14-5','labor-standard-act-14-6':'lsa-14-6',
+  'labor-standard-act-13-proviso':'lsa-13','labor-standard-act-20':'lsa-20','fixed-term':'fixed-term',voluntary:'voluntary',other:'other'
+};
+function officialReasonKey(value=''){return OFFICIAL_REASON_MAP[value]||''}
 function officialInvoluntaryPdf(c){
   const company=COMPANIES[c.fd.companyKey],work=WORKPLACES[c.fd.workplaceRegion];
   const reason=officialReasonKey(c.fd.legalBasis);
