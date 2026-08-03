@@ -23,11 +23,18 @@
     today.addEventListener("click",()=>{text.value=roc(new Date());sync()});
     return sync;
   }
-  const syncDates=[installDate("startDate"),installDate("documentDate")];
+  function installOptionalTextDate(field){
+    const text=$(field);
+    const sync=()=>{if(!text.value){text.setCustomValidity("");text.classList.remove("native-date-error");return true}const d=parseDate(text.value);if(!d){text.setCustomValidity("請輸入正確日期，例如 1150731 或 20260731");text.classList.add("native-date-error");return false}text.value=roc(d);text.setCustomValidity("");text.classList.remove("native-date-error");render();return true};
+    text.addEventListener("input",()=>{text.setCustomValidity("");text.classList.remove("native-date-error")});text.addEventListener("blur",sync);
+    return sync;
+  }
+  const syncDates=[installDate("startDate"),installDate("documentDate"),installOptionalTextDate("lastWorkDate")];
   function value(id,fallback=""){return $(id).value.trim()||fallback}
   function check(id){return $(id).checked?"☑":"☐"}
   function render(){
     $("outName").textContent=value("employeeName","—");$("outNo").textContent=value("employeeNo","—");$("outDepartment").textContent=value("department","—");$("outJobTitle").textContent=value("jobTitle","—");$("outStartDate").textContent=value("startDate","—");$("outDocumentDate").textContent=value("documentDate","—");$("outReason").textContent=value("terminationReason","—");$("outImprovement").textContent=value("improvementRecord","—");$("outLastDate").textContent=value("lastWorkDate","—");$("outSupervisor").textContent=value("supervisorName","主管：—");$("outHr").textContent=value("hrReceiver","人資：—");
+    for(const id of ["reason","improvement","lastDate"]){const field={reason:"terminationReason",improvement:"improvementRecord",lastDate:"lastWorkDate"}[id];$(`out${id[0].toUpperCase()}${id.slice(1)}`).textContent=value(field)}
     for(const id of ["notice","insurance","payroll","leave","documents","archive"]){$(`out-${id}`).textContent=`${check(`check-${id}`)} ${$(`label-${id}`).textContent}`}
   }
   function validate(){message.textContent="";syncDates.forEach(fn=>fn());if(!form.reportValidity()){message.textContent="請完成必填欄位並修正日期格式。";return false}return true}
