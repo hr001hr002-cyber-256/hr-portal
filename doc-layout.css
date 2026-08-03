@@ -45,6 +45,7 @@
 .paper .average-heading{margin-bottom:14px;text-align:center}
 .paper .average-heading .doc-subtitle{font-size:17px;line-height:1.35;margin:0 0 5px;letter-spacing:.04em}
 .paper .average-heading .doc-title{font-size:22px;line-height:1.3;margin:0;letter-spacing:.15em}
+.paper .notice-heading .doc-subtitle,.paper .notice-heading .doc-title,.paper .average-heading .doc-subtitle,.paper .average-heading .doc-title,.paper .service-heading h1{color:#000!important}
 .paper .average-wages{margin-top:12px}
 .paper .average-wages{table-layout:fixed}
 .paper .average-wages th,.paper .average-wages td{font-size:11px;padding:4px;overflow-wrap:anywhere}
