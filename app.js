@@ -90,7 +90,7 @@ function calculate(){
   const fullSix=tenure.totalDays>=180&&averageWages.length>=6;
   const daily=totalNet/tenure.totalDays;
   const monthly=+fd.averageWageOverride||(fullSix?totalNet/6:daily*30);
-  const noticeApplies=/第11條|第13條/.test(fd.legalBasis);
+  const noticeApplies=/^labor-standard-act-(11|13)/.test(fd.legalBasis);
   const completedMonths=tenure.years*12+tenure.months+(tenure.days?tenure.days/31:0);
   const noticeDays=noticeApplies?(completedMonths>=36?30:completedMonths>=12?20:completedMonths>=3?10:0):0;
   const latestNormalWage=sortedWages[0]?.original||0,noticeMonthly=Math.max(monthly,latestNormalWage),noticeDaily=noticeMonthly/30;
@@ -129,13 +129,13 @@ async function downloadExcel(c){
   try{
     const res=await fetch('../templates/資遣通知書-現版.xlsx');if(!res.ok)throw Error('找不到 Excel 範本');const zip=await JSZip.loadAsync(await res.arrayBuffer());
     const company=COMPANIES[c.fd.companyKey];
-    const common={'B1':`${company.name}\n員工資遣通知書`,'C3':c.fd.employeeName,'G3':c.fd.employeeId,'C4':c.fd.employeeAddress,'G4':c.fd.employeePhone,'C5':c.fd.department,'E5':c.fd.jobTitle,'G5':`${c.noticeDays}日`,'G6':c.displayNoticeDate?roc(c.displayNoticeDate):'無','C7':'□免職','G7':roc(c.fd.settlementDate),'C8':`■${c.fd.legalBasis}`,'G8':c.fd.reasonDetail,'C10':roc(c.start),'G10':String(c.tenure.totalDays),'C11':roc(c.end),'G11':String(Math.round(c.monthly)),'C12':String(Math.round(c.severance))};
+    const common={'B1':`${company.name}\n員工資遣通知書`,'C3':c.fd.employeeName,'G3':c.fd.employeeId,'C4':c.fd.employeeAddress,'G4':c.fd.employeePhone,'C5':c.fd.department,'E5':c.fd.jobTitle,'G5':`${c.noticeDays}日`,'G6':c.displayNoticeDate?roc(c.displayNoticeDate):'無','C7':'□免職','G7':roc(c.fd.settlementDate),'C8':`■${legalBasisLabel(c.fd.legalBasis)}`,'G8':c.fd.reasonDetail,'C10':roc(c.start),'G10':String(c.tenure.totalDays),'C11':roc(c.end),'G11':String(Math.round(c.monthly)),'C12':String(Math.round(c.severance))};
     for(const path of ['xl/worksheets/sheet1.xml','xl/worksheets/sheet3.xml']){let xml=await zip.file(path).async('string');for(const [a,v] of Object.entries(common))xml=setCell(xml,a,v);zip.file(path,xml)}
     for(const path of ['xl/worksheets/sheet2.xml','xl/worksheets/sheet4.xml']){let xml=await zip.file(path).async('string');c.wages.slice(0,7).forEach((w,i)=>{const r=i+3,m=w.period.match(/(\d{3,4})\D+(\d{1,2})/);const values={B:m?m[1]:w.period,C:m?m[2]:'',D:Math.round(w.original),G:Math.round(w.original),H:-Math.round(w.partialDeduction),I:Math.round(w.lateMinutes),J:-Math.round(w.lateDeduction),K:w.leaveHours,L:-Math.round(w.leaveDeduction),M:-Math.round(w.otherExclude),N:Math.round(w.net)};for(const [col,val] of Object.entries(values))xml=setCell(xml,`${col}${r}`,val)});xml=setCell(xml,'N10',Math.round(c.totalNet));xml=setCell(xml,'N11',Math.round(c.monthly));zip.file(path,xml)}
     saveBlob(await zip.generateAsync({type:'blob'}),`${c.fd.employeeName}_資遣通知書.xlsx`);
   }catch(err){alert(`無法產生 Excel：${err.message}`)}
 }
-function legalCheckboxes(value){const opts=['勞動基準法第11條第1款－歇業或轉讓','勞動基準法第11條第2款－虧損或業務緊縮','勞動基準法第11條第3款－不可抗力暫停工作逾一個月','勞動基準法第11條第4款－業務性質變更，有減少勞工必要','勞動基準法第11條第5款－勞工對所擔任工作確不能勝任','勞動基準法第13條但書','勞動基準法第20條－事業單位改組或轉讓','勞動基準法第14條－勞工不經預告終止契約'];return opts.map(x=>`${x===value?'■':'□'}${x}`).join('\n')}
+function legalCheckboxes(value){return LEGAL_BASIS_OPTIONS.filter(x=>x.code.startsWith('labor-standard-act-')).map(x=>`${x.code===value?'■':'□'}${x.label}`).join('\n')}
 function tokenXml(value){return xmlEsc(value).replace(/\r?\n/g,'</w:t><w:br/><w:t xml:space="preserve">')}
 async function downloadDocx(type,c){
   try{
@@ -149,7 +149,7 @@ async function downloadDocx(type,c){
   }catch(err){alert(`無法產生 Word：${err.message}`)}
 }
 function docTable(rows){return `<table class="doc-table">${rows.map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td><th>${esc(r[2]||'')}</th><td>${esc(r[3]||'')}</td></tr>`).join('')}</table>`}
-function noticePdf(c){const company=COMPANIES[c.fd.companyKey];return `<div class="notice-document"><header class="notice-heading"><h1 class="doc-subtitle">${esc(company.name)}</h1><h2 class="doc-title">員 工 資 遣 通 知 書</h2></header><table class="doc-table paired-form"><colgroup><col class="label"><col class="value"><col class="label"><col class="value"></colgroup><tr class="section-row"><th colspan="4">一、員工資料</th></tr><tr><th>姓名</th><td>${esc(c.fd.employeeName)}</td><th>身分證字號</th><td>${esc(c.fd.employeeId)}</td></tr><tr><th>通訊地址</th><td>${esc(c.fd.employeeAddress)}</td><th>聯絡電話</th><td>${esc(c.fd.employeePhone)}</td></tr><tr><th>部門</th><td>${esc(c.fd.department)}</td><th>職稱</th><td>${esc(c.fd.jobTitle)}</td></tr><tr class="section-row"><th colspan="4">二、資遣資料</th></tr><tr><th>預告期</th><td>${c.noticeDays}日</td><th>實際預告日</th><td>${c.fd.actualNoticeDate?roc(c.fd.actualNoticeDate):'無'}</td></tr><tr><th>引用條款</th><td colspan="3">${esc(c.fd.legalBasis)}</td></tr><tr><th>理由</th><td colspan="3">${esc(c.fd.reasonDetail)}</td></tr><tr><th>到職日</th><td>${roc(c.start)}</td><th>總年資</th><td>${c.tenure.totalDays}日</td></tr><tr><th>離職日</th><td>${roc(c.end)}</td><th>薪資發放日</th><td>${roc(c.fd.settlementDate)}</td></tr><tr class="section-row"><th colspan="4">三、資遣費金額</th></tr><tr><th>平均工資</th><td class="right">${Math.round(c.monthly).toLocaleString()} 元</td><th>資遣費</th><td class="amount-box">${c.severance.toLocaleString()} 元</td></tr></table><div class="notice-statement"><b>說明：</b><br>離職同仁應遵守保密協定之相關規定，並且不挪用或損毀公司財物與資料、不持有、洩漏或使用因職務獲取之資料及秘密，若有違反公司將請求賠償並應負擔相關法律責任。</div>${c.noticePay>0?`<div class="final-payment notice-final-payment"><span>最終應支付金額</span><strong>${Math.round(c.severance+c.noticePay).toLocaleString()} 元</strong><small>資遣費 ${c.severance.toLocaleString()} 元 ＋ 預告期間工資 ${Math.round(c.noticePay).toLocaleString()} 元 ＝ ${Math.round(c.severance+c.noticePay).toLocaleString()} 元</small></div>`:'' }<div class="employee-signature"><span>員工簽名：</span><span class="signature-space"></span><span>日期：</span><span class="date-space"></span></div></div>`}
+function noticePdf(c){const company=COMPANIES[c.fd.companyKey];return `<div class="notice-document"><header class="notice-heading"><h1 class="doc-subtitle">${esc(company.name)}</h1><h2 class="doc-title">員 工 資 遣 通 知 書</h2></header><table class="doc-table paired-form"><colgroup><col class="label"><col class="value"><col class="label"><col class="value"></colgroup><tr class="section-row"><th colspan="4">一、員工資料</th></tr><tr><th>姓名</th><td>${esc(c.fd.employeeName)}</td><th>身分證字號</th><td>${esc(c.fd.employeeId)}</td></tr><tr><th>通訊地址</th><td>${esc(c.fd.employeeAddress)}</td><th>聯絡電話</th><td>${esc(c.fd.employeePhone)}</td></tr><tr><th>部門</th><td>${esc(c.fd.department)}</td><th>職稱</th><td>${esc(c.fd.jobTitle)}</td></tr><tr class="section-row"><th colspan="4">二、資遣資料</th></tr><tr><th>預告期</th><td>${c.noticeDays}日</td><th>實際預告日</th><td>${c.fd.actualNoticeDate?roc(c.fd.actualNoticeDate):'無'}</td></tr><tr><th>引用條款</th><td colspan="3">${esc(legalBasisLabel(c.fd.legalBasis))}</td></tr><tr><th>理由</th><td colspan="3">${esc(c.fd.reasonDetail)}</td></tr><tr><th>到職日</th><td>${roc(c.start)}</td><th>總年資</th><td>${c.tenure.totalDays}日</td></tr><tr><th>離職日</th><td>${roc(c.end)}</td><th>薪資發放日</th><td>${roc(c.fd.settlementDate)}</td></tr><tr class="section-row"><th colspan="4">三、資遣費金額</th></tr><tr><th>平均工資</th><td class="right">${Math.round(c.monthly).toLocaleString()} 元</td><th>資遣費</th><td class="amount-box">${c.severance.toLocaleString()} 元</td></tr></table><div class="notice-statement"><b>說明：</b><br>離職同仁應遵守保密協定之相關規定，並且不挪用或損毀公司財物與資料、不持有、洩漏或使用因職務獲取之資料及秘密，若有違反公司將請求賠償並應負擔相關法律責任。</div>${c.noticePay>0?`<div class="final-payment notice-final-payment"><span>最終應支付金額</span><strong>${Math.round(c.severance+c.noticePay).toLocaleString()} 元</strong><small>資遣費 ${c.severance.toLocaleString()} 元 ＋ 預告期間工資 ${Math.round(c.noticePay).toLocaleString()} 元 ＝ ${Math.round(c.severance+c.noticePay).toLocaleString()} 元</small></div>`:'' }<div class="employee-signature"><span>員工簽名：</span><span class="signature-space"></span><span>日期：</span><span class="date-space"></span></div></div>`}
 function averagePdf(c){
   const company=COMPANIES[c.fd.companyKey],noticeBasis=c.latestNormalWage>=c.monthly?'最近一個月正常工資':'最近六個月平均工資';
   const rows=c.wages.map(w=>`<tr><td>${esc(w.period)}</td><td class="right">${Math.round(w.original).toLocaleString()}</td><td class="right">${Math.round(w.bonus||0).toLocaleString()}</td><td class="right">${Math.round(w.partialDeduction).toLocaleString()}</td><td class="right">${Math.round(w.leaveDeduction).toLocaleString()}</td><td class="right">${Math.round(w.lateDeduction).toLocaleString()}</td><td class="right">${Math.round(w.otherExclude).toLocaleString()}</td><td class="right">${Math.round(w.net).toLocaleString()}</td></tr>`).join('');
@@ -163,25 +163,53 @@ const baseAveragePdf=averagePdf;
 averagePdf=c=>baseAveragePdf(c)
   .replace('<th>年／月</th><th>原工資</th><th>未足月扣款</th>','<th>年／月</th><th>原工資</th><th>獎金</th><th>未足月扣款</th>')
   .replace('<th colspan="6">總應領工資</th>','<th colspan="7">總應領工資</th>');
-const OFFICIAL_REASON_OPTIONS=['關廠','遷廠','休業','解散','受破產宣告','勞動基準法第11條第1款','勞動基準法第11條第2款','勞動基準法第11條第3款','勞動基準法第11條第4款','勞動基準法第11條第5款','勞動基準法第14條第1款','勞動基準法第14條第2款','勞動基準法第14條第3款','勞動基準法第14條第4款','勞動基準法第14條第5款','勞動基準法第14條第6款','勞動基準法第13條但書','勞動基準法第20條','定期契約工作期滿','自願離職','其他'];
+const LEGAL_BASIS_OPTIONS=[
+  {code:'closure',label:'關廠',reason:'關廠'},
+  {code:'relocation',label:'遷廠',reason:'遷廠'},
+  {code:'suspension',label:'休業',reason:'休業'},
+  {code:'dissolution',label:'解散',reason:'解散'},
+  {code:'bankruptcy',label:'受破產宣告',reason:'受破產宣告'},
+  {code:'labor-standard-act-11-1',label:'勞動基準法第11條第1款',reason:'歇業或轉讓時'},
+  {code:'labor-standard-act-11-2',label:'勞動基準法第11條第2款',reason:'虧損或業務緊縮時'},
+  {code:'labor-standard-act-11-3',label:'勞動基準法第11條第3款',reason:'不可抗力暫停工作在一個月以上時'},
+  {code:'labor-standard-act-11-4',label:'勞動基準法第11條第4款',reason:'業務性質變更，有減少勞工之必要，又無適當工作可供安置時'},
+  {code:'labor-standard-act-11-5',label:'勞動基準法第11條第5款',reason:'勞工對於所擔任之工作確不能勝任時'},
+  {code:'labor-standard-act-14-1',label:'勞動基準法第14條第1款',reason:'雇主於訂立勞動契約時為虛偽之意思表示，使勞工誤信而有受損害之虞者'},
+  {code:'labor-standard-act-14-2',label:'勞動基準法第14條第2款',reason:'雇主、雇主家屬、雇主代理人對於勞工，實施暴行或有重大侮辱之行為者'},
+  {code:'labor-standard-act-14-3',label:'勞動基準法第14條第3款',reason:'契約所訂之工作，對於勞工健康有危害之虞，經通知雇主改善而無效果者'},
+  {code:'labor-standard-act-14-4',label:'勞動基準法第14條第4款',reason:'雇主、雇主代理人或其他勞工患有法定傳染病，對共同工作之勞工有傳染之虞，且重大危害其健康者'},
+  {code:'labor-standard-act-14-5',label:'勞動基準法第14條第5款',reason:'雇主不依勞動契約給付工作報酬，或對於按件計酬之勞工不供給充分之工作者'},
+  {code:'labor-standard-act-14-6',label:'勞動基準法第14條第6款',reason:'雇主違反勞動契約或勞工法令，致有損害勞工權益之虞者'},
+  {code:'labor-standard-act-13-proviso',label:'勞動基準法第13條但書',reason:'雇主因天災、事變或其他不可抗力致事業不能繼續，經報主管機關核定者'},
+  {code:'labor-standard-act-20',label:'勞動基準法第20條',reason:'事業單位改組或轉讓時'},
+  {code:'fixed-term',label:'定期契約工作期滿',reason:'定期契約工作期滿'},
+  {code:'voluntary',label:'自願離職',reason:'自願離職'},
+  {code:'other',label:'其他',reason:''}
+];
+const terminationReasonMap=Object.fromEntries(LEGAL_BASIS_OPTIONS.map(({code,reason})=>[code,reason]));
+const legalBasisLabel=code=>LEGAL_BASIS_OPTIONS.find(option=>option.code===code)?.label||'';
 function installOfficialReasonOptions(){
   const select=form.elements.legalBasis;
-  select.innerHTML='<option value="">請選擇</option>'+OFFICIAL_REASON_OPTIONS.map(value=>`<option value="${value}">${value}</option>`).join('');
+  const textarea=form.elements.reasonDetail;
+  select.innerHTML='<option value="">請選擇</option>'+LEGAL_BASIS_OPTIONS.map(({code,label})=>`<option value="${code}">${label}</option>`).join('');
+  let previousValue='',lastAutomaticText='';
+  select.addEventListener('change',()=>{
+    const nextValue=select.value,nextText=terminationReasonMap[nextValue]||'';
+    const manuallyEdited=textarea.value!==lastAutomaticText;
+    if(manuallyEdited&&!confirm('您已修改資遣理由內容，切換法源依據將重新帶入法定文字，是否繼續？')){
+      select.value=previousValue;
+      return;
+    }
+    textarea.value=nextText;
+    textarea.dispatchEvent(new Event('input',{bubbles:true}));
+    previousValue=nextValue;
+    lastAutomaticText=nextText;
+  });
+  form.addEventListener('reset',()=>setTimeout(()=>{previousValue='';lastAutomaticText='';textarea.value=''},0));
 }
 function officialReasonKey(value=''){
-  if(value==='關廠')return'closure';
-  if(value==='遷廠')return'relocation';
-  if(value==='休業')return'suspension';
-  if(value==='解散')return'dissolution';
-  if(value==='受破產宣告')return'bankruptcy';
-  if(value==='定期契約工作期滿')return'fixed-term';
-  if(value==='自願離職')return'voluntary';
-  if(value==='其他')return'other';
-  const article=value.match(/第\s*(11|14)\s*條第\s*([1-6])\s*款/);
-  if(article)return`lsa-${article[1]}-${article[2]}`;
-  if(/第\s*13\s*條/.test(value))return'lsa-13';
-  if(/第\s*20\s*條/.test(value))return'lsa-20';
-  return'';
+  const aliases={closure:'closure',relocation:'relocation',suspension:'suspension',dissolution:'dissolution',bankruptcy:'bankruptcy','labor-standard-act-13-proviso':'lsa-13','labor-standard-act-20':'lsa-20','fixed-term':'fixed-term',voluntary:'voluntary',other:'other'};
+  return aliases[value]||value.replace('labor-standard-act-','lsa-');
 }
 function officialInvoluntaryPdf(c){
   const company=COMPANIES[c.fd.companyKey],work=WORKPLACES[c.fd.workplaceRegion];
