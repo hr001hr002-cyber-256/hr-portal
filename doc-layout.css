@@ -62,10 +62,10 @@
 .paper .severance-total{display:flex;align-items:center;justify-content:space-between;margin:10px 0;padding:10px 14px;border:2px solid #294f43;background:#e9f0ed;color:#173f34}
 .paper .severance-total span{font-size:15px;font-weight:700;letter-spacing:.06em}
 .paper .severance-total strong{font-size:22px;line-height:1.2}
-.paper .final-payment{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px 16px;margin:10px 0;padding:10px 14px;border:2px solid #173f34;background:#294f43;color:#fff}
+.paper .final-payment{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px 16px;margin:10px 0;padding:10px 14px;border:2px solid #294f43;background:#e3ece8;color:#173f34}
 .paper .final-payment span{font-size:15px;font-weight:700;letter-spacing:.06em}
 .paper .final-payment strong{font-size:22px;line-height:1.2}
-.paper .final-payment small{grid-column:1/-1;text-align:right;color:#d7e4df}
+.paper .final-payment small{grid-column:1/-1;text-align:right;color:#405c53}
 .paper .notice-summary{margin-top:10px;border:1px solid #8b9792}
 .paper .notice-summary h3{margin:0;padding:6px 10px;background:#dfe9e5;color:#173f34;font-size:14px}
 .paper .notice-summary dl{display:grid;grid-template-columns:1fr 1fr;margin:0}
@@ -116,6 +116,8 @@
   @page{size:A4 portrait;margin:0}
   .paper .notice-heading,.paper .average-heading,.paper .service-heading{padding:0;border-bottom:0;background:#fff!important;color:#000!important}
   .paper .notice-heading .doc-subtitle,.paper .notice-heading .doc-title,.paper .average-heading .doc-subtitle,.paper .average-heading .doc-title,.paper .service-heading h1{color:#000!important}
+  .paper .final-payment{border-color:#222!important;background:#fff!important;color:#000!important}
+  .paper .final-payment span,.paper .final-payment strong,.paper .final-payment small{color:#000!important}
   .paper:has(.official-form-document){width:210mm!important;margin:0!important;background:#fff}
   .paper .official-form-document{width:210mm!important}
   .paper .official-page{break-after:page;page-break-after:always}
