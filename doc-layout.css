@@ -114,10 +114,12 @@
 .paper .field-contact-phone{left:61.8%;top:69.6%;width:30.2%;height:2.4%;font-size:14px}
 @media print{
   @page{size:A4 portrait;margin:0}
-  .paper .notice-heading,.paper .average-heading,.paper .service-heading{padding:0;border-bottom:0;background:#fff!important;color:#000!important}
-  .paper .notice-heading .doc-subtitle,.paper .notice-heading .doc-title,.paper .average-heading .doc-subtitle,.paper .average-heading .doc-title,.paper .service-heading h1{color:#000!important}
-  .paper .final-payment{border-color:#222!important;background:#fff!important;color:#000!important}
-  .paper .final-payment span,.paper .final-payment strong,.paper .final-payment small{color:#000!important}
+  .paper,.paper *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+  .paper .notice-heading,.paper .average-heading,.paper .service-heading{padding:0;border-bottom-color:#7f9d92!important;background:#eef3f1!important;color:#173f34!important}
+  .paper .notice-heading .doc-subtitle,.paper .notice-heading .doc-title,.paper .average-heading .doc-subtitle,.paper .average-heading .doc-title,.paper .service-heading h1{color:#173f34!important}
+  .paper .final-payment{border-color:#294f43!important;background:#e3ece8!important;color:#173f34!important}
+  .paper .final-payment span,.paper .final-payment strong{color:#173f34!important}
+  .paper .final-payment small{color:#405c53!important}
   .paper:has(.official-form-document){width:210mm!important;margin:0!important;background:#fff}
   .paper .official-form-document{width:210mm!important}
   .paper .official-page{break-after:page;page-break-after:always}
