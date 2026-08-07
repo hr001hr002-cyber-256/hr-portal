@@ -30,19 +30,31 @@
     return sync;
   }
   const syncDates=[installDate("startDate"),installDate("documentDate"),installOptionalTextDate("lastWorkDate")];
+  const REQUIRED_FIELDS=["employeeName","employeeNo","department","jobTitle","startDate","documentDate"];
+  const LAST_WORK_DATE_BLANK="____ / ____ / ____";
+  const INPUT_LIMITS={employeeName:30,employeeNo:30,department:40,jobTitle:40,terminationReason:180,improvementRecord:300,lastWorkDate:30,supervisorName:40,hrReceiver:40};
+  for(const id of REQUIRED_FIELDS)$(id).required=true;
+  for(const [id,maxLength] of Object.entries(INPUT_LIMITS))$(id).maxLength=maxLength;
   function value(id,fallback=""){return $(id).value.trim()||fallback}
   function check(id){return $(id).checked?"☑":"☐"}
   function render(){
-    $("outName").textContent=value("employeeName","—");$("outNo").textContent=value("employeeNo","—");$("outDepartment").textContent=value("department","—");$("outJobTitle").textContent=value("jobTitle","—");$("outStartDate").textContent=value("startDate","—");$("outDocumentDate").textContent=value("documentDate","—");$("outReason").textContent=value("terminationReason","—");$("outImprovement").textContent=value("improvementRecord","—");$("outLastDate").textContent=value("lastWorkDate","—");$("outSupervisor").textContent=value("supervisorName","主管：—");$("outHr").textContent=value("hrReceiver","人資：—");
-    for(const id of ["reason","improvement","lastDate"]){const field={reason:"terminationReason",improvement:"improvementRecord",lastDate:"lastWorkDate"}[id];$(`out${id[0].toUpperCase()}${id.slice(1)}`).textContent=value(field)}
+    $("outName").textContent=value("employeeName");$("outNo").textContent=value("employeeNo");$("outDepartment").textContent=value("department");$("outJobTitle").textContent=value("jobTitle");$("outStartDate").textContent=value("startDate");$("outDocumentDate").textContent=value("documentDate");$("outReason").textContent=value("terminationReason");$("outImprovement").textContent=value("improvementRecord");$("outLastDate").textContent=value("lastWorkDate",LAST_WORK_DATE_BLANK);$("outSupervisor").textContent=value("supervisorName");$("outHr").textContent=value("hrReceiver");
     for(const id of ["notice","insurance","payroll","leave","documents","archive"]){$(`out-${id}`).textContent=`${check(`check-${id}`)} ${$(`label-${id}`).textContent}`}
   }
-  function validate(){message.textContent="";syncDates.forEach(fn=>fn());if(!form.reportValidity()){message.textContent="請完成必填欄位並修正日期格式。";return false}return true}
+  function validate(){
+    message.textContent="";
+    const datesValid=syncDates.every(fn=>fn());
+    const missingRequired=REQUIRED_FIELDS.some(id=>!value(id));
+    if(missingRequired){message.textContent="請完成所有必填欄位。";form.reportValidity();return false}
+    if(!datesValid||!form.reportValidity()){message.textContent="請修正日期格式。";return false}
+    return true;
+  }
   const esc=s=>String(s??"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
-  function replaceToken(xml,key,value){return xml.split(`{{${key}}}`).join(esc(value))}
+  function wordText(value){return esc(value).replace(/\r\n?|\n/g,'</w:t><w:br/><w:t xml:space="preserve">')}
+  function replaceToken(xml,key,value){return xml.split(`{{${key}}}`).join(wordText(value))}
   async function downloadWord(){
     if(!validate())return;
-    try{const response=await fetch("templates/資遣確認單-範本.docx");if(!response.ok)throw Error("找不到 Word 範本");const zip=await JSZip.loadAsync(await response.arrayBuffer());let xml=await zip.file("word/document.xml").async("string");const tokens={EMPLOYEE_NAME:value("employeeName"),EMPLOYEE_NO:value("employeeNo"),DEPARTMENT:value("department"),JOB_TITLE:value("jobTitle"),START_DATE:value("startDate"),DOCUMENT_DATE:value("documentDate"),TERMINATION_REASON:value("terminationReason"),IMPROVEMENT_RECORD:value("improvementRecord"),LAST_WORK_DATE:value("lastWorkDate"),SUPERVISOR_NAME:value("supervisorName"),HR_RECEIVER:value("hrReceiver"),CHECK_NOTICE:check("check-notice"),CHECK_INSURANCE:check("check-insurance"),CHECK_PAYROLL:check("check-payroll"),CHECK_LEAVE:check("check-leave"),CHECK_DOCUMENTS:check("check-documents"),CHECK_ARCHIVE:check("check-archive")};for(const [key,val] of Object.entries(tokens))xml=replaceToken(xml,key,val);zip.file("word/document.xml",xml);const blob=await zip.generateAsync({type:"blob"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${value("employeeName","員工")}_資遣確認單.docx`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}catch(error){message.textContent=`無法產生 Word：${error.message}`}
+    try{const response=await fetch("templates/資遣確認單-範本.docx");if(!response.ok)throw Error("找不到 Word 範本");const zip=await JSZip.loadAsync(await response.arrayBuffer());let xml=await zip.file("word/document.xml").async("string");const tokens={EMPLOYEE_NAME:value("employeeName"),EMPLOYEE_NO:value("employeeNo"),DEPARTMENT:value("department"),JOB_TITLE:value("jobTitle"),START_DATE:value("startDate"),DOCUMENT_DATE:value("documentDate"),TERMINATION_REASON:value("terminationReason"),IMPROVEMENT_RECORD:value("improvementRecord"),LAST_WORK_DATE:value("lastWorkDate",LAST_WORK_DATE_BLANK),SUPERVISOR_NAME:value("supervisorName"),HR_RECEIVER:value("hrReceiver"),CHECK_NOTICE:check("check-notice"),CHECK_INSURANCE:check("check-insurance"),CHECK_PAYROLL:check("check-payroll"),CHECK_LEAVE:check("check-leave"),CHECK_DOCUMENTS:check("check-documents"),CHECK_ARCHIVE:check("check-archive")};for(const [key,val] of Object.entries(tokens))xml=replaceToken(xml,key,val);zip.file("word/document.xml",xml);const blob=await zip.generateAsync({type:"blob"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${value("employeeName","員工")}_資遣確認單.docx`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}catch(error){message.textContent=`無法產生 Word：${error.message}`}
   }
   function fitDialog(){const dialog=$("pdfDialog"),paper=$("dialogPaper");if(!dialog.open)return;paper.innerHTML=$("previewPaper").innerHTML;const fit=Math.min(1,(dialog.clientWidth-24)/794);dialog.style.setProperty("--fit-scale",String(fit))}
   $("previewPdf").addEventListener("click",()=>{if(!validate())return;$("pdfDialog").showModal();requestAnimationFrame(fitDialog)});$("printPdf").addEventListener("click",()=>{document.body.classList.add("printing-dialog");window.print()});window.addEventListener("afterprint",()=>document.body.classList.remove("printing-dialog"));$("closeDialog").addEventListener("click",()=>$("pdfDialog").close());$("toggleZoom").addEventListener("click",()=>{$("pdfDialog").classList.toggle("zoomed");$("toggleZoom").textContent=$("pdfDialog").classList.contains("zoomed")?"符合寬度":"放大閱讀"});$("downloadWord").addEventListener("click",downloadWord);window.addEventListener("resize",fitDialog);form.addEventListener("input",render);form.addEventListener("change",render);form.addEventListener("reset",()=>setTimeout(()=>{message.textContent="";$("documentDate").value=roc(new Date());syncDates.forEach(fn=>fn());render()},0));$("documentDate").value=roc(new Date());syncDates.forEach(fn=>fn());render();
