@@ -32,10 +32,12 @@
   const syncDates=[installDate("startDate"),installDate("documentDate"),installOptionalTextDate("lastWorkDate")];
   const REQUIRED_FIELDS=["employeeName","employeeNo","department","jobTitle","startDate","documentDate"];
   const OPTIONAL_FIELDS=["terminationReason","improvementRecord","lastWorkDate","supervisorName","hrReceiver","check-notice","check-insurance","check-payroll","check-leave","check-documents","check-archive"];
+  const DOCUMENT_NOTE="備註：本表為內部作業文件，供主管與人資確認資遣流程及後續行政事項。";
   const LAST_WORK_DATE_BLANK="____ / ____ / ____";
   const INPUT_LIMITS={employeeName:30,employeeNo:30,department:40,jobTitle:40,terminationReason:180,improvementRecord:300,lastWorkDate:30,supervisorName:40,hrReceiver:40};
   for(const id of REQUIRED_FIELDS)$(id).required=true;
   for(const id of OPTIONAL_FIELDS)$(id).required=false;
+  document.querySelectorAll(".doc-note").forEach(note=>note.textContent=DOCUMENT_NOTE);
   for(const [id,maxLength] of Object.entries(INPUT_LIMITS))$(id).maxLength=maxLength;
   function value(id,fallback=""){return $(id).value.trim()||fallback}
   function check(id){return $(id).checked?"☑":"☐"}

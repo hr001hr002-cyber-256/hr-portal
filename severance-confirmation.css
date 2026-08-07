@@ -2,4 +2,4 @@
 @media print{.printing-dialog .preview-wrap{display:none!important}}
 @media print{.paper,.paper *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}.section-title{background:#e9f0ed!important}.section-title b{color:#fff!important;background:#315d50!important}.doc-table th{background:#f1f3f2!important}}
 .narrative tr:nth-child(1) td{height:84px}.narrative tr:nth-child(2) td{height:112px}.narrative tr:nth-child(3) td{height:58px}@media print{.narrative tr:nth-child(1) td{height:22mm}.narrative tr:nth-child(2) td{height:30mm}.narrative tr:nth-child(3) td{height:15mm}}
-.narrative th{width:23%}.narrative td{width:77%}
+.narrative th{width:23%}.narrative td{width:77%}.doc-head p{display:none}
