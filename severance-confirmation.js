@@ -31,7 +31,7 @@
   }
   const syncDates=[installDate("startDate"),installDate("documentDate"),installOptionalTextDate("lastWorkDate")];
   const REQUIRED_FIELDS=["employeeName","employeeNo","department","jobTitle","startDate","documentDate"];
-  const OPTIONAL_FIELDS=["terminationReason","improvementRecord","lastWorkDate","supervisorName","hrReceiver"];
+  const OPTIONAL_FIELDS=["terminationReason","improvementRecord","lastWorkDate","supervisorName","hrReceiver","check-notice","check-insurance","check-payroll","check-leave","check-documents","check-archive"];
   const LAST_WORK_DATE_BLANK="____ / ____ / ____";
   const INPUT_LIMITS={employeeName:30,employeeNo:30,department:40,jobTitle:40,terminationReason:180,improvementRecord:300,lastWorkDate:30,supervisorName:40,hrReceiver:40};
   for(const id of REQUIRED_FIELDS)$(id).required=true;
