@@ -41,6 +41,26 @@
 .paper .company-seals span{text-align:center;font-weight:700}
 .paper .company-seals i{height:50px;border:1px dashed #8b9792;background:#fafbfb}
 .paper .service-issue-date{margin-top:auto;padding:26px 0 4px;text-align:center;font-size:18px;letter-spacing:.16em;border-bottom:5px solid #9ab9ae}
+.paper:has(.resignation-document){width:210mm;padding:0!important;background:#fff}
+.paper .resignation-document{position:relative;width:210mm;height:297mm;overflow:hidden;color:#000;background:#fff;font-family:"DFKai-SB","BiauKai","標楷體",serif;line-height:1}
+.paper .resignation-document>img{display:block;width:100%;height:100%;object-fit:fill}
+.paper .resignation-table-frame{position:absolute;z-index:2;left:7.12%;top:20.9%;width:85.72%;height:59.75%;box-sizing:border-box;border:1.2pt solid #000;pointer-events:none}
+.paper .resignation-field{position:absolute;z-index:1;display:flex;align-items:center;justify-content:center;box-sizing:border-box;overflow:hidden;padding:0 2mm;color:#000;background:transparent;font-size:11pt;font-weight:400;line-height:1.15;white-space:nowrap}
+.paper .resignation-company,.paper .resignation-heading{left:28%;width:44%;height:3.5%;padding:0;font-size:16pt;font-weight:700;letter-spacing:.08em;background:#fff}
+.paper .resignation-company{top:9.85%}
+.paper .resignation-heading{top:13.55%}
+.paper .resignation-date{left:64.5%;top:18.05%;width:30%;height:2.6%;justify-content:flex-end;padding:0;font-size:10.5pt;background:#fff;letter-spacing:.02em}
+.paper .resignation-name{left:18.95%;top:20.95%;width:28.8%;height:4.65%}
+.paper .resignation-department{left:60.8%;top:20.95%;width:32%;height:4.65%}
+.paper .resignation-title{left:18.95%;top:25.6%;width:28.8%;height:4.95%}
+.paper .resignation-start-date{left:60.8%;top:25.6%;width:32%;height:4.95%}
+.paper .resignation-phone{left:18.95%;top:30.55%;width:28.8%;height:5.03%}
+.paper .resignation-end-date{left:60.8%;top:30.55%;width:32%;height:5.03%}
+.paper .resignation-address{left:18.95%;top:35.58%;width:73.85%;height:5.12%;justify-content:center;padding:0 3mm;font-size:10.5pt}
+.paper.combined-preview{padding:0;background:#e7eae8}
+.paper .combined-sheet{box-sizing:border-box;width:210mm;min-height:297mm;margin:0 auto 16px;padding:38px;background:#fff}
+.paper .combined-resignation,.paper .combined-involuntary{padding:0}
+.documents .combined-doc-button{background:#173f34;font-weight:700}
 .paper .average-document{font-size:13px;line-height:1.5}
 .paper .average-heading{margin-bottom:14px;padding:10px 14px;border-bottom:2px solid #7f9d92;background:#eef3f1;color:#173f34;text-align:center}
 .paper .average-heading .doc-subtitle{font-size:17px;line-height:1.35;margin:0 0 5px;letter-spacing:.04em}
@@ -124,4 +144,8 @@
   .paper .official-form-document{width:210mm!important}
   .paper .official-page{break-after:page;page-break-after:always}
   .paper .official-page:last-child{break-after:auto;page-break-after:auto}
+  .paper:has(.resignation-document){width:210mm!important;height:297mm!important;margin:0!important;padding:0!important}
+  .paper.combined-preview{width:auto!important;height:auto!important;background:#fff!important}
+  .paper .combined-sheet{width:210mm!important;min-height:297mm!important;margin:0!important;break-after:page;page-break-after:always}
+  .paper .combined-sheet:last-child{break-after:auto;page-break-after:auto}
 }

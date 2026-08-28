@@ -156,6 +156,51 @@ function averagePdf(c){
   return `<div class="average-document"><header class="average-heading"><h1 class="doc-subtitle">${esc(company.name)}</h1><h2 class="doc-title">平 均 工 資 計 算 明 細</h2></header>${docTable([['員工姓名',c.fd.employeeName,'計算類型',c.fullSix?'滿六個月':'未滿六個月'],['到職日',roc(c.start),'離職日',roc(c.end)],['總年資',`${c.tenure.totalDays}日`,'部門／職稱',`${c.fd.department}／${c.fd.jobTitle}`]])}<table class="doc-table wage-detail average-wages"><tr><th>年／月</th><th>原工資</th><th>未足月扣款</th><th>事假扣款</th><th>遲到扣款</th><th>其他排除</th><th>應領工資</th></tr>${rows}<tr><th colspan="6">總應領工資</th><td class="right">${Math.round(c.totalNet).toLocaleString()}</td></tr></table><div class="formula-box average-formula"><b>平均工資算式</b><br>${c.fullSix?`${Math.round(c.totalNet).toLocaleString()} ÷ 6個月`:`${Math.round(c.totalNet).toLocaleString()} ÷ ${c.tenure.totalDays}日 × 30`} ＝ ${Math.round(c.monthly).toLocaleString()} 元</div><div class="severance-total"><span>資遣費總金額</span><strong>${c.severance.toLocaleString()} 元</strong></div>${c.noticePay>0?`<div class="final-payment"><span>最終應支付金額</span><strong>${Math.round(c.severance+c.noticePay).toLocaleString()} 元</strong><small>資遣費 ${c.severance.toLocaleString()} 元 ＋ 預告期間工資 ${Math.round(c.noticePay).toLocaleString()} 元</small></div>`:'' }<section class="notice-summary"><h3>預告工資說明</h3><dl><div><dt>法定預告天數</dt><dd>${c.noticeDays} 日</dd></div><div><dt>預告日期</dt><dd>${c.displayNoticeDate?roc(c.displayNoticeDate):'無'}</dd></div><div><dt>最近六個月平均工資</dt><dd>${Math.round(c.monthly).toLocaleString()} 元</dd></div><div><dt>最近一個月正常工資</dt><dd>${Math.round(c.latestNormalWage).toLocaleString()} 元</dd></div><div><dt>預告工資採用基準</dt><dd>${noticeBasis}：${Math.round(c.noticeMonthly).toLocaleString()} 元</dd></div><div><dt>預告期間工資（另列）</dt><dd>${Math.round(c.noticeMonthly).toLocaleString()} ÷ 30 × ${c.shortNotice} 日 ＝ ${Math.round(c.noticePay).toLocaleString()} 元</dd></div></dl></section><table class="doc-table approval-table approval-three"><tr><th>製表</th><th>審查</th><th>核准</th></tr><tr><td></td><td></td><td></td></tr></table></div>`;
 }
 function servicePdf(c){const company=COMPANIES[c.fd.companyKey];return `<div class="service-document"><header class="service-heading"><h1>離 職 證 明 單</h1><div class="service-title-rule"><span></span><i></i><span></span></div></header><section class="service-section employee-section"><h2>員工基本資料</h2><table class="doc-table service-employee-table"><colgroup><col class="service-label"><col class="service-value"><col class="service-label"><col class="service-value"></colgroup><tr><th>姓名</th><td>${esc(c.fd.employeeName)}</td><th>出生年月日</th><td>${rocLong(c.fd.birthDate)}</td></tr><tr><th>性別</th><td>${c.fd.gender==='female'?'女':'男'}</td><th>身分證字號</th><td>${esc(c.fd.employeeId)}</td></tr><tr><th>服務部門</th><td>${esc(c.fd.department)}</td><th>職稱</th><td>${esc(c.fd.jobTitle)}</td></tr><tr><th>到職日期</th><td>${rocLong(c.start)}</td><th>離職日期</th><td>${rocLong(c.end)}</td></tr></table></section><div class="service-statement"><span></span><b>上列各項確實無訛，特此證明</b><span></span></div><section class="service-section company-section"><h2>公司資訊</h2><div class="company-info-layout"><div class="company-details"><p><strong>公司名稱：</strong>${esc(company.name)}</p><p><strong>營利事業登記證字號：</strong>${esc(company.id)}</p><p><strong>地址：</strong>${esc(c.fd.workplace)}</p><p><strong>負責人：</strong>${esc(company.representative)}</p><p><strong>電話：</strong>${esc(company.phone)}</p></div><div class="company-seals"><div><span>公司章</span><i></i></div><div><span>負責人簽章</span><i></i></div></div></div></section><div class="service-issue-date">${rocLong(new Date())}</div></div>`}
+function resignationApplicationPdf(c){
+  const company=COMPANIES[c.fd.companyKey]||{};
+  const today=new Date(),dateParts={year:today.getFullYear()-1911,month:String(today.getMonth()+1).padStart(2,'0'),day:String(today.getDate()).padStart(2,'0')};
+  const rocSlash=value=>{const d=typeof value==='string'?date(value):value;return d?`${d.getFullYear()-1911}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`:''};
+  const overlay=(className,text)=>`<span class="resignation-field ${className}">${esc(text)}</span>`;
+  return `<div class="resignation-document">
+    <img src="../templates/maya-resignation-form.png" alt="員工離職申請單公版">
+    <span class="resignation-table-frame" aria-hidden="true"></span>
+    ${overlay('resignation-company',company.name||'')}
+    ${overlay('resignation-heading','員工離職申請單')}
+    ${overlay('resignation-date',`填表日期： ${dateParts.year} 年 ${dateParts.month} 月 ${dateParts.day} 日`)}
+    ${overlay('resignation-name',c.fd.employeeName)}
+    ${overlay('resignation-department',c.fd.department)}
+    ${overlay('resignation-title',c.fd.jobTitle)}
+    ${overlay('resignation-start-date',rocSlash(c.start))}
+    ${overlay('resignation-phone',c.fd.employeePhone)}
+    ${overlay('resignation-end-date',rocSlash(c.end))}
+    ${overlay('resignation-address',c.fd.employeeAddress)}
+  </div>`;
+}
+
+function installResignationApplicationUI(){
+  const existing=document.querySelector('.documents');
+  if(!existing||document.querySelector('[data-doc="resignation"]'))return;
+  const button=document.createElement('button');
+  button.type='button';
+  button.dataset.doc='resignation';
+  button.textContent='產生離職申請書 PDF';
+  const actions=existing.lastElementChild;
+  const container=actions&&actions.tagName==='DIV'?actions:existing;
+  container.append(button);
+  const combined=document.createElement('button');
+  combined.type='button';
+  combined.dataset.doc='combined';
+  combined.className='combined-doc-button';
+  combined.textContent='一鍵合併全部文件 PDF';
+  container.append(combined);
+}
+
+function combinedPdf(c){
+  const sheet=(type,content)=>`<section class="combined-sheet combined-${type}">${content}</section>`;
+  const voluntary=c.fd.departureType==='voluntary';
+  if(voluntary)return sheet('service',servicePdf(c))+sheet('resignation',resignationApplicationPdf(c));
+  return sheet('notice',noticePdf(c))+sheet('average',averagePdf(c))+sheet('service',servicePdf(c))+sheet('involuntary',involuntaryPdf(c))+sheet('resignation',resignationApplicationPdf(c));
+}
 function involuntaryPdf(c){const company=COMPANIES[c.fd.companyKey],work=WORKPLACES[c.fd.workplaceRegion];return `<h1 class="doc-title">非 自 願 離 職 證 明 書</h1><p class="doc-note">本證明書依就業保險相關規定使用，內容請於送出前再次核對。</p>${docTable([['姓名',c.fd.employeeName,'出生日期',rocLong(c.fd.birthDate)],['性別',c.fd.gender==='female'?'□男　■女':'■男　□女','身分證號碼',c.fd.employeeId],['住址',c.fd.employeeAddress,'電話',c.fd.employeePhone],['離職當月工資',Math.round(+c.fd.lastMonthlySalary||c.wages.at(-1)?.net||0).toLocaleString(),'離職日',roc(c.end)],['實際工作地',work?.label||'','職稱',c.fd.jobTitle]])}<table class="doc-table"><tr><th>離職原因<br>（僅可勾選一項）</th><td class="checkboxes">${esc(legalCheckboxes(c.fd.legalBasis))}<br>事實說明：${esc(c.fd.reasonDetail)}</td></tr><tr><th>投保單位證明欄</th><td>投保單位名稱：${esc(company.name)}<br>保險證字號：${esc(company.insuranceNo)}　投保單位電話：${esc(company.phone)}<br>投保單位地址：${esc(company.address)}<br><br>本表所記載資料內容，業經投保單位複核無誤。</td></tr><tr><th>投保單位蓋章</th><td style="height:80px"></td></tr></table>`}
 const baseNoticePdf=noticePdf;
 noticePdf=c=>baseNoticePdf(c).replace(/<tr><th>姓名<\/th><td>.*?<\/td><th>身分證字號<\/th><td>.*?<\/td><\/tr><tr><th>通訊地址<\/th><td>.*?<\/td><th>聯絡電話<\/th><td>.*?<\/td><\/tr><tr><th>部門<\/th><td>.*?<\/td><th>職稱<\/th><td>.*?<\/td><\/tr>/,`<tr><th>姓名</th><td>${esc(c.fd.employeeName)}</td><th>身分證字號</th><td>${esc(c.fd.employeeId)}</td></tr><tr class="notice-address-row"><th>通訊地址</th><td colspan="3" class="notice-address">${esc(c.fd.employeeAddress)}</td></tr><tr><th>聯絡電話</th><td>${esc(c.fd.employeePhone)}</td><th>部門／職稱</th><td>${esc(c.fd.department)}／${esc(c.fd.jobTitle)}</td></tr>`);
@@ -256,7 +301,8 @@ installOfficialReasonOptions();
 involuntaryPdf=officialInvoluntaryPdf;
 let previewZoomed=false;
 function fitDocumentPreview(){const preview=document.querySelector('#documentPreview'),dialog=document.querySelector('#documentDialog');if(!dialog.open)return;preview.style.setProperty('--preview-scale','1');const available=Math.max(280,dialog.clientWidth-24),paperWidth=preview.getBoundingClientRect().width,fit=Math.min(1,available/paperWidth),scale=previewZoomed&&innerWidth<=760?Math.min(1,Math.max(.72,fit)):fit;preview.style.setProperty('--preview-scale',String(scale));document.querySelector('#togglePreviewZoom').textContent=previewZoomed?'符合寬度':'放大閱讀';dialog.classList.toggle('preview-zoomed',previewZoomed)}
-document.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>{if(!latest)return;previewZoomed=false;const type=b.dataset.doc,titles={notice:'資遣通知書',average:'平均工資計算明細',service:'離職證明單',involuntary:'非自願離職證明書'};document.querySelector('#dialogTitle').textContent=`${titles[type]}－列印／另存 PDF`;document.querySelector('#documentPreview').innerHTML=type==='notice'?noticePdf(latest):type==='average'?averagePdf(latest):type==='service'?servicePdf(latest):involuntaryPdf(latest);document.querySelector('#documentDialog').showModal();requestAnimationFrame(fitDocumentPreview)});
+installResignationApplicationUI();
+document.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>{if(!latest)return;const type=b.dataset.doc;previewZoomed=false;const titles={notice:'資遣通知書',average:'平均工資計算明細',service:'離職證明單',involuntary:'非自願離職證明書',resignation:'離職申請書',combined:'合併文件'};const preview=document.querySelector('#documentPreview');preview.classList.toggle('combined-preview',type==='combined');document.querySelector('#dialogTitle').textContent=`${titles[type]}－列印／另存 PDF`;preview.innerHTML=type==='combined'?combinedPdf(latest):type==='notice'?noticePdf(latest):type==='average'?averagePdf(latest):type==='service'?servicePdf(latest):type==='resignation'?resignationApplicationPdf(latest):involuntaryPdf(latest);document.querySelector('#documentDialog').showModal();requestAnimationFrame(fitDocumentPreview)});
 document.querySelector('#togglePreviewZoom').onclick=()=>{previewZoomed=!previewZoomed;fitDocumentPreview()};
 window.addEventListener('resize',fitDocumentPreview);
 document.querySelector('#closeDialog').onclick=()=>document.querySelector('#documentDialog').close();
