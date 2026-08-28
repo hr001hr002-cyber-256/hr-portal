@@ -5,78 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="SOBER HR 人資工具入口網站">
   <title>SOBER HR Tools</title>
-  <link rel="stylesheet" href="portal.css?v=20260731-appointment">
+  <link rel="stylesheet" href="portal.css?v=20260827-hub2">
 </head>
 <body>
   <header class="portal-header">
-    <div class="portal-shell">
+    <div class="portal-shell portal-header__inner">
       <a class="portal-brand" href="./" aria-label="SOBER HR Tools 首頁">
-        <strong>SOBER HR Tools</strong>
-        <span>人資作業工具</span>
+        <span class="portal-brand__mark" aria-hidden="true">HR</span>
+        <span class="portal-brand__text"><strong>SOBER HR Tools</strong><small>人資作業工具中心</small></span>
       </a>
+      <span class="privacy-badge"><span aria-hidden="true">●</span> 資料僅在本機處理</span>
     </div>
   </header>
 
   <main class="portal-shell portal-main">
-    <section class="portal-intro">
-      <p>HR WORKSPACE</p>
-      <h1>人資工具入口</h1>
-      <span>選擇需要的工具。所有個人資料只在目前瀏覽器頁面中處理，不會上傳或儲存。</span>
+    <section class="portal-hero" aria-labelledby="portal-title">
+      <div class="portal-intro">
+        <p>HR WORKSPACE</p>
+        <h1 id="portal-title">讓每一項人資作業<br><em>更快、更準確。</em></h1>
+        <span>將常用計算、文件製作與紀錄查詢集中在同一個工作入口。所有個人資料只在目前瀏覽器頁面中處理，不會上傳或儲存。</span>
+      </div>
+      <aside class="hero-summary" aria-label="工具中心摘要">
+        <div class="hero-summary__top"><span>工具中心</span><strong>持續擴充中</strong></div>
+        <div class="hero-summary__stats">
+          <div><strong id="summaryToolCount">5</strong><span>目前工具</span></div>
+          <div><strong id="summaryCategoryCount">3</strong><span>作業分類</span></div>
+          <div><strong>100%</strong><span>本機處理</span></div>
+        </div>
+      </aside>
     </section>
 
-    <section class="tool-grid" aria-label="人資工具">
-      <a class="tool-card" href="announcement-generator.html">
-        <span class="tool-icon" aria-hidden="true">告</span>
-        <span class="tool-content">
-          <small>DOCUMENT</small>
-          <strong>公告文件產生器</strong>
-          <span>依 A4 版型即時產生公司公告，支援自動分頁、Word、PDF 與列印。</span>
-        </span>
-        <span class="tool-arrow" aria-hidden="true">→</span>
-      </a>
+    <section class="tool-browser" aria-labelledby="tools-title">
+      <div class="tool-browser__heading">
+        <div><p>TOOLS</p><h2 id="tools-title">選擇工作工具</h2></div>
+        <span id="toolCount" aria-live="polite">共 5 項工具</span>
+      </div>
 
-      <a class="tool-card" href="severance-calculator/">
-        <span class="tool-icon" aria-hidden="true">算</span>
-        <span class="tool-content">
-          <small>CALCULATOR</small>
-          <strong>資遣費計算工具</strong>
-          <span>計算平均工資、預告期間與資遣費，並產生相關文件。</span>
-        </span>
-        <span class="tool-arrow" aria-hidden="true">→</span>
-      </a>
+      <div class="tool-controls">
+        <label class="tool-search"><span aria-hidden="true">⌕</span><input id="toolSearch" type="search" placeholder="搜尋工具名稱或功能…" autocomplete="off"></label>
+        <div class="category-filters" role="group" aria-label="工具分類">
+          <button type="button" class="is-active" data-filter="all">全部</button>
+          <button type="button" data-filter="document">文件產生</button>
+          <button type="button" data-filter="calculator">計算工具</button>
+          <button type="button" data-filter="records">紀錄查詢</button>
+        </div>
+      </div>
 
-      <a class="tool-card" href="appointment-letter.html">
-        <span class="tool-icon" aria-hidden="true">聘</span>
-        <span class="tool-content">
-          <small>DOCUMENT</small>
-          <strong>聘任通知書產生器</strong>
-          <span>選擇公司與版本，填寫報到資料後即時預覽、列印或另存 PDF。</span>
-        </span>
-        <span class="tool-arrow" aria-hidden="true">→</span>
-      </a>
-
-      <a class="tool-card" href="severance-confirmation.html">
-        <span class="tool-icon" aria-hidden="true">確</span>
-        <span class="tool-content">
-          <small>DOCUMENT</small>
-          <strong>資遣確認單產生器</strong>
-          <span>填寫資遣確認資料，產生單頁 A4 PDF 與可編輯 Word 文件。</span>
-        </span>
-        <span class="tool-arrow" aria-hidden="true">→</span>
-      </a>
-
-      <a class="tool-card" href="records-center.html">
-        <span class="tool-icon" aria-hidden="true">查</span>
-        <span class="tool-content">
-          <small>RECORDS</small>
-          <strong>公告與薪資調整</strong>
-          <span>查看本月新增筆數，搜尋公司公告及薪資調整文件。</span>
-        </span>
-        <span class="tool-arrow" aria-hidden="true">→</span>
-      </a>
+      <div class="tool-grid" id="toolGrid">
+        <a class="tool-card tool-card--announcement" href="announcement-generator.html" data-category="document" data-search="公告作業 公告製作 公告文件 a4 word pdf 列印 自動分頁">
+          <span class="tool-icon" aria-hidden="true">公</span><span class="tool-content"><small>公告作業</small><strong>公告製作</strong></span><span class="tool-action">開啟 <b aria-hidden="true">→</b></span>
+        </a>
+        <a class="tool-card tool-card--calculator" href="severance-calculator/" data-category="calculator" data-search="離職及資遣 資遣費 離職文件 平均工資 預告期間 資遣通知書 非自願離職證明">
+          <span class="tool-icon" aria-hidden="true">離</span><span class="tool-content"><small>離職及資遣</small><strong>資遣費與離職文件</strong></span><span class="tool-action">開啟 <b aria-hidden="true">→</b></span>
+        </a>
+        <a class="tool-card tool-card--appointment" href="appointment-letter.html" data-category="document" data-search="聘任通知書產生器 公司 版本 報到 預覽 pdf">
+          <span class="tool-icon" aria-hidden="true">聘</span><span class="tool-content"><small>到職文件</small><strong>聘任通知書</strong></span><span class="tool-action">開啟 <b aria-hidden="true">→</b></span>
+        </a>
+        <a class="tool-card tool-card--confirmation" href="severance-confirmation.html" data-category="document" data-search="資遣確認單產生器 a4 pdf word 資遣確認">
+          <span class="tool-icon" aria-hidden="true">遣</span><span class="tool-content"><small>資遣文件</small><strong>資遣確認單</strong></span><span class="tool-action">開啟 <b aria-hidden="true">→</b></span>
+        </a>
+        <a class="tool-card tool-card--records" href="records-center.html" data-category="records" data-search="公告與薪資調整 查詢 搜尋 公告 薪資調整 文件">
+          <span class="tool-icon" aria-hidden="true">查</span><span class="tool-content"><small>文件查詢</small><strong>公告與薪資紀錄</strong></span><span class="tool-action">開啟 <b aria-hidden="true">→</b></span>
+        </a>
+      </div>
+      <div class="empty-state" id="emptyState" hidden><strong>找不到符合的工具</strong><span>請更換關鍵字或選擇其他分類。</span></div>
     </section>
   </main>
 
-  <footer>© SOBER HR Tools</footer>
+  <footer><span>SOBER HR Tools</span><small>讓日常人資作業更簡單</small></footer>
+  <script src="portal.js?v=20260827-hub2"></script>
 </body>
 </html>
