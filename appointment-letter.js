@@ -17,6 +17,7 @@
 
   const $ = (id) => document.getElementById(id);
   const form = $("appointmentForm");
+  const pageTitle = document.title;
   let locationManuallyChanged = false;
   const today = new Date();
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -80,6 +81,7 @@
   function printDocument(showHint) {
     if (!form.reportValidity()) return;
     $("pdfHint").hidden = !showHint;
+    document.title = "聘任通知書";
     requestAnimationFrame(() => window.print());
   }
 
@@ -113,7 +115,10 @@
   });
   $("printButton").addEventListener("click", () => printDocument(false));
   $("pdfButton").addEventListener("click", () => printDocument(true));
-  window.addEventListener("afterprint", () => { $("pdfHint").hidden = true; });
+  window.addEventListener("afterprint", () => {
+    $("pdfHint").hidden = true;
+    document.title = pageTitle;
+  });
   $("location").value = companies[$("company").value].defaultLocation;
   render();
 })();
