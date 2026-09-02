@@ -81,7 +81,8 @@
   function printDocument(showHint) {
     if (!form.reportValidity()) return;
     $("pdfHint").hidden = !showHint;
-    document.title = "聘任通知書";
+    const candidateName = $("candidateName").value.trim().replace(/[\\/:*?"<>|]/g, "_");
+    document.title = candidateName ? `聘任通知書-${candidateName}` : "聘任通知書";
     requestAnimationFrame(() => window.print());
   }
 
