@@ -1,6 +1,11 @@
 (() => {
   "use strict";
 
+  const settingsStyle = document.createElement("link");
+  settingsStyle.rel = "stylesheet";
+  settingsStyle.href = "appointment-settings.css?v=20260902-content-settings-v2";
+  document.head.append(settingsStyle);
+
   const companies = {
     sober: { name: "搜博科技股份有限公司", taxId: "29035099", logo: "assets/logos/sober.jpg", defaultLocation: "taipei", centeredLogo: false },
     maya: { name: "馬雅科技股份有限公司", taxId: "96784466", logo: "assets/logos/maya.png", defaultLocation: "taipei", centeredLogo: true },
@@ -22,6 +27,107 @@
   const today = new Date();
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   $("documentDate").value = localToday;
+
+  const contentStorageKey = "soberHrAppointmentTemplateV1";
+  const editableSections = [
+    { key: "general", label: "一般版通知內容", selector: "#generalTerms", mode: "paragraphs" },
+    { key: "sales", label: "業務版通知內容", selector: "#salesTerms", mode: "paragraphs" },
+    { key: "documents", label: "報到文件清單", selector: ".onboarding-documents ol", mode: "list", preserveSelector: "#laptopDocument" },
+    { key: "notes", label: "注意事項", selector: ".important-notes", mode: "list" }
+  ].filter(item => document.querySelector(item.selector));
+  const defaultTemplateContent = Object.fromEntries(editableSections.map(item => {
+    const node = document.querySelector(item.selector);
+    const parts = item.mode === "list" ? [...node.querySelectorAll("li")].filter(part => !item.preserveSelector || !part.matches(item.preserveSelector)) : [...node.querySelectorAll(":scope > p")];
+    return [item.key, (parts.length ? parts : [node]).map(part => part.textContent.trim()).filter(Boolean).join("\n")];
+  }));
+  const templateBaselineHeight = Math.max(1123, $("letter").scrollHeight);
+  let templateContentFits = true;
+
+  function templateLines(value) {
+    return String(value ?? "").split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  }
+
+  function applyTemplateContent(values) {
+    editableSections.forEach(item => {
+      const node = document.querySelector(item.selector);
+      const lines = templateLines(values[item.key] ?? defaultTemplateContent[item.key]);
+      const elements = lines.map(line => {
+        const element = document.createElement(item.mode === "list" ? "li" : "p");
+        element.textContent = line;
+        return element;
+      });
+      const preservedElement = item.preserveSelector ? node.querySelector(item.preserveSelector) : null;
+      node.replaceChildren(...elements);
+      if (preservedElement) node.append(preservedElement);
+    });
+  }
+
+  function savedTemplateContent() {
+    try {
+      return { ...defaultTemplateContent, ...JSON.parse(localStorage.getItem(contentStorageKey) || "{}") };
+    } catch {
+      return { ...defaultTemplateContent };
+    }
+  }
+
+  function nextFrame() {
+    return new Promise(resolve => requestAnimationFrame(resolve));
+  }
+
+  async function fitTemplateContent() {
+    const letter = $("letter");
+    letter.classList.remove("content-compact", "content-tight");
+    await nextFrame();
+    if (letter.scrollHeight > templateBaselineHeight) letter.classList.add("content-compact");
+    await nextFrame();
+    if (letter.scrollHeight > templateBaselineHeight) letter.classList.add("content-tight");
+    await nextFrame();
+    templateContentFits = letter.scrollHeight <= templateBaselineHeight;
+    return templateContentFits;
+  }
+
+  function setTemplateStatus(message, isError = false) {
+    const status = $("templateSettingsStatus");
+    if (!status) return;
+    status.textContent = message;
+    status.classList.toggle("is-error", isError);
+  }
+
+  function installTemplateSettings() {
+    if (!editableSections.length) return;
+    const details = document.createElement("details");
+    details.className = "template-settings";
+    details.innerHTML = `<summary>後台｜聘任通知書內容設定</summary><div class="template-settings__body"><p>只調整制式文字；姓名、職稱、薪資、報到日期與地點仍由原欄位帶入。每一行會建立為一個段落或清單項目，設定只儲存在目前瀏覽器。</p>${editableSections.map(item => `<label>${item.label}<textarea data-template-key="${item.key}" rows="4"></textarea></label>`).join("")}<div class="template-settings__actions"><button type="button" id="saveTemplateSettings">儲存設定</button><button type="button" id="resetTemplateSettings">恢復原始內容</button></div><p class="template-settings__status" id="templateSettingsStatus" aria-live="polite"></p></div>`;
+    form.insertBefore(details, form.querySelector(".privacy-note"));
+    const values = savedTemplateContent();
+    details.querySelectorAll("textarea").forEach(area => { area.value = values[area.dataset.templateKey] || ""; });
+
+    $("saveTemplateSettings").addEventListener("click", async () => {
+      const previous = savedTemplateContent();
+      const next = {};
+      details.querySelectorAll("textarea").forEach(area => { next[area.dataset.templateKey] = area.value; });
+      applyTemplateContent(next);
+      if (!(await fitTemplateContent())) {
+        applyTemplateContent(previous);
+        await fitTemplateContent();
+        setTemplateStatus("內容過長，已保留原設定。請縮短文字後再儲存。", true);
+        return;
+      }
+      localStorage.setItem(contentStorageKey, JSON.stringify(next));
+      setTemplateStatus("設定已儲存，後續新產生的文件會直接套用。", false);
+    });
+
+    $("resetTemplateSettings").addEventListener("click", async () => {
+      localStorage.removeItem(contentStorageKey);
+      details.querySelectorAll("textarea").forEach(area => { area.value = defaultTemplateContent[area.dataset.templateKey] || ""; });
+      applyTemplateContent(defaultTemplateContent);
+      await fitTemplateContent();
+      setTemplateStatus("已恢復原始制式內容。", false);
+    });
+    applyTemplateContent(values);
+  }
+
+  installTemplateSettings();
 
   function text(id, value, fallback = "—") { $(id).textContent = value || fallback; }
   function formatMoney(value) { return value ? `新臺幣 ${Number(value).toLocaleString("zh-TW")} 元整` : "新臺幣 — 元整"; }
@@ -75,11 +181,19 @@
     text("outTaxId", company.taxId);
     $("generalTerms").hidden = version === "sales";
     $("salesTerms").hidden = version !== "sales";
-    $("laptopDocument").hidden = version === "general";
+    const laptopDocument = $("laptopDocument");
+    if (laptopDocument) laptopDocument.hidden = version === "general";
+    void fitTemplateContent();
   }
 
   function printDocument(showHint) {
     if (!form.reportValidity()) return;
+    if (!templateContentFits) {
+      const settings = document.querySelector(".template-settings");
+      if (settings) settings.open = true;
+      setTemplateStatus("內容超出版面，請縮短制式文字後再匯出。", true);
+      return;
+    }
     $("pdfHint").hidden = !showHint;
     const candidateName = $("candidateName").value.trim().replace(/[\\/:*?"<>|]/g, "_");
     document.title = candidateName ? `聘任通知書-${candidateName}` : "聘任通知書";
