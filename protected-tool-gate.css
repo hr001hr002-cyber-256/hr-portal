@@ -1,6 +1,0 @@
-body.tool-locked{overflow:hidden}
-body.tool-locked>:not(#protectedToolGate):not(script){visibility:hidden}
-.protected-tool-gate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:24px;background:#f5f7f6;font-family:"Microsoft JhengHei","PingFang TC",system-ui,sans-serif}
-.protected-tool-gate[hidden]{display:none}
-.protected-tool-gate__card{width:min(100%,460px);padding:30px;border:1px solid #d9dfdc;border-radius:16px;background:#fff;box-shadow:0 20px 60px rgba(32,59,52,.12)}
-.protected-tool-gate__card small{color:#315d50;font-weight:800;letter-spacing:.14em}.protected-tool-gate__card h1{margin:10px 0 8px;color:#203b34;font-size:30px}.protected-tool-gate__card p{color:#68716d;line-height:1.65}.protected-tool-gate__card label{display:block;margin-top:18px;font-weight:700}.protected-tool-gate__card input{width:100%;min-height:46px;margin-top:7px;padding:10px 12px;border:1px solid #bfc8c4;border-radius:8px;font:inherit}.protected-tool-gate__card button{width:100%;min-height:46px;margin-top:12px;border:0;border-radius:8px;color:#fff;background:#315d50;font:inherit;font-weight:700}.protected-tool-gate__error{min-height:22px;margin:8px 0 0!important;color:#a12b2b!important}

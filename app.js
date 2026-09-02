@@ -1,10 +1,8 @@
-const printCore=document.createElement('link');printCore.rel='stylesheet';printCore.href='../print-core.css?v=20260902-mobile-print-v1';document.head.append(printCore);
 const form=document.querySelector('#severanceForm');
 const wageRows=document.querySelector('#wageRows');
 const results=document.querySelector('#results');
 const money=new Intl.NumberFormat('zh-TW',{style:'currency',currency:'TWD',maximumFractionDigits:0});
-let latest=null,activeDocumentTitle='文件';
-const originalPageTitle=document.title;
+let latest=null;
 
 const COMPANIES={
   sobo:{name:'搜博科技股份有限公司',id:'29035099',representative:'陳智國',address:'新北市中和區中正路866號17樓',phone:'02-2208-2928',insuranceNo:'05722749S'},
@@ -36,7 +34,7 @@ function installRocDateInputs(){
   document.querySelectorAll('.roc-date').forEach(input=>{
     const wrap=document.createElement('span');wrap.className='roc-date-picker';input.before(wrap);wrap.append(input);
     const button=document.createElement('button');button.type='button';button.className='roc-calendar-button';button.setAttribute('aria-label','開啟日期選單');button.textContent='選擇日期';
-    const picker=document.createElement('input');picker.type='date';picker.className='native-date-picker';picker.setAttribute('aria-label','西元日期選單');
+    const picker=document.createElement('input');picker.type='date';picker.className='native-date-picker';picker.tabIndex=-1;picker.setAttribute('aria-label','西元日期選單');
     wrap.append(button,picker);
     const syncFromText=()=>{if(!input.value){picker.value='';input.setCustomValidity('');return}const parsed=date(input.value);if(!parsed){input.setCustomValidity('請使用民國年月日格式，例如：民國115年07月30日');return}input.value=ymd(parsed);picker.value=iso(parsed);input.setCustomValidity('')};
     input.addEventListener('input',()=>input.setCustomValidity(''));
@@ -134,7 +132,7 @@ async function downloadExcel(c){
     const common={'B1':`${company.name}\n員工資遣通知書`,'C3':c.fd.employeeName,'G3':c.fd.employeeId,'C4':c.fd.employeeAddress,'G4':c.fd.employeePhone,'C5':c.fd.department,'E5':c.fd.jobTitle,'G5':`${c.noticeDays}日`,'G6':c.displayNoticeDate?roc(c.displayNoticeDate):'無','C7':'□免職','G7':roc(c.fd.settlementDate),'C8':`■${legalBasisLabel(c.fd.legalBasis)}`,'G8':c.fd.reasonDetail,'C10':roc(c.start),'G10':String(c.tenure.totalDays),'C11':roc(c.end),'G11':String(Math.round(c.monthly)),'C12':String(Math.round(c.severance))};
     for(const path of ['xl/worksheets/sheet1.xml','xl/worksheets/sheet3.xml']){let xml=await zip.file(path).async('string');for(const [a,v] of Object.entries(common))xml=setCell(xml,a,v);zip.file(path,xml)}
     for(const path of ['xl/worksheets/sheet2.xml','xl/worksheets/sheet4.xml']){let xml=await zip.file(path).async('string');c.wages.slice(0,7).forEach((w,i)=>{const r=i+3,m=w.period.match(/(\d{3,4})\D+(\d{1,2})/);const values={B:m?m[1]:w.period,C:m?m[2]:'',D:Math.round(w.original),G:Math.round(w.original),H:-Math.round(w.partialDeduction),I:Math.round(w.lateMinutes),J:-Math.round(w.lateDeduction),K:w.leaveHours,L:-Math.round(w.leaveDeduction),M:-Math.round(w.otherExclude),N:Math.round(w.net)};for(const [col,val] of Object.entries(values))xml=setCell(xml,`${col}${r}`,val)});xml=setCell(xml,'N10',Math.round(c.totalNet));xml=setCell(xml,'N11',Math.round(c.monthly));zip.file(path,xml)}
-    saveBlob(await zip.generateAsync({type:'blob'}),'資遣通知書.xlsx');
+    saveBlob(await zip.generateAsync({type:'blob'}),`${c.fd.employeeName}_資遣通知書.xlsx`);
   }catch(err){alert(`無法產生 Excel：${err.message}`)}
 }
 function legalCheckboxes(value){return LEGAL_BASIS_OPTIONS.filter(x=>x.code.startsWith('labor-standard-act-')).map(x=>`${x.code===value?'■':'□'}${x.label}`).join('\n')}
@@ -147,7 +145,7 @@ async function downloadDocx(type,c){
     }:{
       EMPLOYEE_NAME:c.fd.employeeName,BIRTH_DATE:rocLong(c.fd.birthDate),GENDER_CHECK:c.fd.gender==='female'?'□男\n■女':'■男\n□女',EMPLOYEE_ADDRESS:c.fd.employeeAddress,EMPLOYEE_PHONE:c.fd.employeePhone,LAST_MONTH_WAGE:Math.round(+c.fd.lastMonthlySalary||c.wages.at(-1)?.net||0).toLocaleString('zh-TW'),END_DATE_SHORT:roc(c.end),WORKPLACE_REGION:work?.label||'',LEGAL_CHECKBOXES:legalCheckboxes(c.fd.legalBasis),INSURANCE_BLOCK:`投保單位名稱：${company.name}\n\n保險證字號：${company.insuranceNo}              投保單位電話：${company.phone}\n投保單位地址：${company.address}\n本表粗框內所記載資料內容，業經投保單位複核無誤，如有不實願負一切法律責任。\n投保單位聯絡人：            聯絡電話：${company.phone}`,...Object.fromEntries([...id].map((ch,i)=>[`ID_${i}`,ch]))
     };
-    for(const [key,val] of Object.entries(tokens))xml=xml.split(`{{${key}}}`).join(tokenXml(val));zip.file('word/document.xml',xml);saveBlob(await zip.generateAsync({type:'blob'}),`${isService?'離職證明書':'非自願離職證明書'}.docx`);
+    for(const [key,val] of Object.entries(tokens))xml=xml.split(`{{${key}}}`).join(tokenXml(val));zip.file('word/document.xml',xml);saveBlob(await zip.generateAsync({type:'blob'}),`${c.fd.employeeName}_${isService?'離職證明單':'非自願離職證明書'}.docx`);
   }catch(err){alert(`無法產生 Word：${err.message}`)}
 }
 function docTable(rows){return `<table class="doc-table">${rows.map(r=>`<tr><th>${esc(r[0])}</th><td>${esc(r[1])}</td><th>${esc(r[2]||'')}</th><td>${esc(r[3]||'')}</td></tr>`).join('')}</table>`}
@@ -199,10 +197,9 @@ function installResignationApplicationUI(){
 
 function combinedPdf(c){
   const sheet=(type,content)=>`<section class="combined-sheet combined-${type}">${content}</section>`;
-  const officialSheets=content=>{const template=document.createElement('template');template.innerHTML=content;return[...template.content.querySelectorAll('.official-page')].map(page=>sheet('involuntary',`<div class="official-form-document">${page.outerHTML}</div>`)).join('')};
   const voluntary=c.fd.departureType==='voluntary';
   if(voluntary)return sheet('service',servicePdf(c))+sheet('resignation',resignationApplicationPdf(c));
-  return sheet('notice',noticePdf(c))+sheet('average',averagePdf(c))+sheet('service',servicePdf(c))+officialSheets(involuntaryPdf(c))+sheet('resignation',resignationApplicationPdf(c));
+  return sheet('notice',noticePdf(c))+sheet('average',averagePdf(c))+sheet('service',servicePdf(c))+sheet('involuntary',involuntaryPdf(c))+sheet('resignation',resignationApplicationPdf(c));
 }
 function involuntaryPdf(c){const company=COMPANIES[c.fd.companyKey],work=WORKPLACES[c.fd.workplaceRegion];return `<h1 class="doc-title">非 自 願 離 職 證 明 書</h1><p class="doc-note">本證明書依就業保險相關規定使用，內容請於送出前再次核對。</p>${docTable([['姓名',c.fd.employeeName,'出生日期',rocLong(c.fd.birthDate)],['性別',c.fd.gender==='female'?'□男　■女':'■男　□女','身分證號碼',c.fd.employeeId],['住址',c.fd.employeeAddress,'電話',c.fd.employeePhone],['離職當月工資',Math.round(+c.fd.lastMonthlySalary||c.wages.at(-1)?.net||0).toLocaleString(),'離職日',roc(c.end)],['實際工作地',work?.label||'','職稱',c.fd.jobTitle]])}<table class="doc-table"><tr><th>離職原因<br>（僅可勾選一項）</th><td class="checkboxes">${esc(legalCheckboxes(c.fd.legalBasis))}<br>事實說明：${esc(c.fd.reasonDetail)}</td></tr><tr><th>投保單位證明欄</th><td>投保單位名稱：${esc(company.name)}<br>保險證字號：${esc(company.insuranceNo)}　投保單位電話：${esc(company.phone)}<br>投保單位地址：${esc(company.address)}<br><br>本表所記載資料內容，業經投保單位複核無誤。</td></tr><tr><th>投保單位蓋章</th><td style="height:80px"></td></tr></table>`}
 const baseNoticePdf=noticePdf;
@@ -305,10 +302,9 @@ involuntaryPdf=officialInvoluntaryPdf;
 let previewZoomed=false;
 function fitDocumentPreview(){const preview=document.querySelector('#documentPreview'),dialog=document.querySelector('#documentDialog');if(!dialog.open)return;preview.style.setProperty('--preview-scale','1');const available=Math.max(280,dialog.clientWidth-24),paperWidth=preview.getBoundingClientRect().width,fit=Math.min(1,available/paperWidth),scale=previewZoomed&&innerWidth<=760?Math.min(1,Math.max(.72,fit)):fit;preview.style.setProperty('--preview-scale',String(scale));document.querySelector('#togglePreviewZoom').textContent=previewZoomed?'符合寬度':'放大閱讀';dialog.classList.toggle('preview-zoomed',previewZoomed)}
 installResignationApplicationUI();
-document.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>{if(!latest)return;const type=b.dataset.doc;previewZoomed=false;const titles={notice:'資遣通知書',average:'平均工資計算明細',service:'離職證明書',involuntary:'非自願離職證明書',resignation:'離職申請書',combined:'合併文件'};activeDocumentTitle=titles[type];const preview=document.querySelector('#documentPreview');preview.classList.toggle('combined-preview',type==='combined');document.querySelector('#dialogTitle').textContent=`${titles[type]}－列印／另存 PDF`;preview.innerHTML=type==='combined'?combinedPdf(latest):type==='notice'?noticePdf(latest):type==='average'?averagePdf(latest):type==='service'?servicePdf(latest):type==='resignation'?resignationApplicationPdf(latest):involuntaryPdf(latest);document.querySelector('#documentDialog').showModal();requestAnimationFrame(fitDocumentPreview)});
+document.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>{if(!latest)return;const type=b.dataset.doc;previewZoomed=false;const titles={notice:'資遣通知書',average:'平均工資計算明細',service:'離職證明單',involuntary:'非自願離職證明書',resignation:'離職申請書',combined:'合併文件'};const preview=document.querySelector('#documentPreview');preview.classList.toggle('combined-preview',type==='combined');document.querySelector('#dialogTitle').textContent=`${titles[type]}－列印／另存 PDF`;preview.innerHTML=type==='combined'?combinedPdf(latest):type==='notice'?noticePdf(latest):type==='average'?averagePdf(latest):type==='service'?servicePdf(latest):type==='resignation'?resignationApplicationPdf(latest):involuntaryPdf(latest);document.querySelector('#documentDialog').showModal();requestAnimationFrame(fitDocumentPreview)});
 document.querySelector('#togglePreviewZoom').onclick=()=>{previewZoomed=!previewZoomed;fitDocumentPreview()};
 window.addEventListener('resize',fitDocumentPreview);
 document.querySelector('#closeDialog').onclick=()=>document.querySelector('#documentDialog').close();
-document.querySelector('#printDocument').onclick=()=>{document.title=activeDocumentTitle;requestAnimationFrame(()=>window.print())};
-window.addEventListener('afterprint',()=>{document.title=originalPageTitle});
+document.querySelector('#printDocument').onclick=()=>window.print();
 addWageRow();
