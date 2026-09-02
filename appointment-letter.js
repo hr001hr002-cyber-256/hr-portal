@@ -1,5 +1,6 @@
 (() => {
   "use strict";
+  const printCore=document.createElement("link");printCore.rel="stylesheet";printCore.href="print-core.css?v=20260902-mobile-print-v1";document.head.append(printCore);const settingsStyle=document.createElement("link");settingsStyle.rel="stylesheet";settingsStyle.href="appointment-settings.css?v=20260902";document.head.append(settingsStyle);
 
   const companies = {
     sober: { name: "搜博科技股份有限公司", taxId: "29035099", logo: "assets/logos/sober.jpg", defaultLocation: "taipei", centeredLogo: false },
@@ -17,10 +18,20 @@
 
   const $ = (id) => document.getElementById(id);
   const form = $("appointmentForm");
+  const originalPageTitle=document.title;
   let locationManuallyChanged = false;
   const today = new Date();
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   $("documentDate").value = localToday;
+  const contentStorageKey="soberHrAppointmentTemplateV1";
+  const editableSections=[{key:"general",label:"一般版通知內容",selector:"#generalTerms",mode:"paragraphs"},{key:"sales",label:"業務版通知內容",selector:"#salesTerms",mode:"paragraphs"},{key:"documents",label:"報到文件清單",selector:".onboarding-documents ol",mode:"list"},{key:"notes",label:"注意事項",selector:".important-notes",mode:"list"}].filter(item=>document.querySelector(item.selector));
+  const defaults=Object.fromEntries(editableSections.map(item=>{const node=document.querySelector(item.selector),parts=item.mode==="list"?[...node.querySelectorAll("li")]:[...node.querySelectorAll(":scope > p")];return[item.key,(parts.length?parts:[node]).map(part=>part.textContent.trim()).filter(Boolean).join("\n")]}));
+  function applyTemplateContent(values){editableSections.forEach(item=>{const node=document.querySelector(item.selector),lines=String(values[item.key]??defaults[item.key]??"").split(/\r?\n/).map(line=>line.trim()).filter(Boolean);if(item.mode==="list")node.replaceChildren(...lines.map(line=>{const li=document.createElement("li");li.textContent=line;return li}));else node.replaceChildren(...lines.map(line=>{const p=document.createElement("p");p.textContent=line;return p}))})}
+  function savedTemplate(){try{return{...defaults,...JSON.parse(localStorage.getItem(contentStorageKey)||"{}")}}catch{return{...defaults}}}
+  function fitLetterPreview(){const letter=$("letter"),area=letter.closest(".preview-area"),scale=innerWidth<=980?Math.min(1,area.clientWidth/794):1;letter.style.setProperty("--letter-preview-scale",String(scale));area.style.setProperty("--letter-preview-height",`${Math.ceil(letter.scrollHeight*scale+28)}px`)}
+  function fitTemplateContent(){const letter=$("letter");letter.classList.remove("content-compact","content-tight");requestAnimationFrame(()=>{if(letter.scrollHeight>1123)letter.classList.add("content-compact");requestAnimationFrame(()=>{if(letter.scrollHeight>1123)letter.classList.add("content-tight");const status=$("templateSettingsStatus");if(status&&letter.scrollHeight>1123)status.textContent="內容仍超出版面，請縮短文字後再匯出。";fitLetterPreview()})})}
+  function installTemplateSettings(){if(!editableSections.length)return;const details=document.createElement("details");details.className="template-settings";details.innerHTML=`<summary>後台｜聘任通知書內容設定</summary><div class="template-settings__body"><p>只調整制式文字；姓名、職稱、薪資與日期仍由上方欄位帶入。</p>${editableSections.map(item=>`<label>${item.label}<textarea data-template-key="${item.key}" rows="4"></textarea></label>`).join("")}<div class="template-settings__actions"><button type="button" id="saveTemplateSettings">儲存設定</button><button type="button" id="resetTemplateSettings">恢復原始內容</button></div><p id="templateSettingsStatus" aria-live="polite"></p></div>`;form.insertBefore(details,form.querySelector(".privacy-note"));const values=savedTemplate();details.querySelectorAll("textarea").forEach(area=>area.value=values[area.dataset.templateKey]||"");$("saveTemplateSettings").onclick=()=>{const next={};details.querySelectorAll("textarea").forEach(area=>next[area.dataset.templateKey]=area.value);localStorage.setItem(contentStorageKey,JSON.stringify(next));applyTemplateContent(next);render();$("templateSettingsStatus").textContent="設定已儲存在這台裝置的瀏覽器。"};$("resetTemplateSettings").onclick=()=>{localStorage.removeItem(contentStorageKey);details.querySelectorAll("textarea").forEach(area=>area.value=defaults[area.dataset.templateKey]||"");applyTemplateContent(defaults);render();$("templateSettingsStatus").textContent="已恢復原始內容。"};applyTemplateContent(values)}
+  installTemplateSettings();
 
   function text(id, value, fallback = "—") { $(id).textContent = value || fallback; }
   function formatMoney(value) { return value ? `新臺幣 ${Number(value).toLocaleString("zh-TW")} 元整` : "新臺幣 — 元整"; }
@@ -75,11 +86,13 @@
     $("generalTerms").hidden = version === "sales";
     $("salesTerms").hidden = version !== "sales";
     $("laptopDocument").hidden = version === "general";
+    fitTemplateContent();
   }
 
   function printDocument(showHint) {
     if (!form.reportValidity()) return;
     $("pdfHint").hidden = !showHint;
+    document.title="聘任通知書";
     requestAnimationFrame(() => window.print());
   }
 
@@ -113,7 +126,8 @@
   });
   $("printButton").addEventListener("click", () => printDocument(false));
   $("pdfButton").addEventListener("click", () => printDocument(true));
-  window.addEventListener("afterprint", () => { $("pdfHint").hidden = true; });
+  window.addEventListener("afterprint", () => { $("pdfHint").hidden = true; document.title=originalPageTitle; });
   $("location").value = companies[$("company").value].defaultLocation;
+  window.addEventListener("resize",fitLetterPreview);
   render();
 })();

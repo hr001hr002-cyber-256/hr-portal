@@ -1004,7 +1004,9 @@
   }, "儲存格文字已改為橫排。"));
   document.getElementById("downloadWord").addEventListener("click", downloadWord);
   document.getElementById("exportPdf").addEventListener("click", exportPdf);
-  document.getElementById("printDocument").addEventListener("click", () => window.print());
+  const originalPageTitle=document.title;
+  document.getElementById("printDocument").addEventListener("click", () => { document.title=safeFilename(); requestAnimationFrame(()=>window.print()); });
+  window.addEventListener("afterprint",()=>{document.title=originalPageTitle});
   window.addEventListener("resize", scheduleRender);
   initializeToolVisibility();
   normalizeAllTables();
