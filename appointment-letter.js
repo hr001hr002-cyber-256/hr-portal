@@ -157,9 +157,18 @@
     return `${hour < 12 ? "上午" : "下午"} ${hour % 12 || 12}:${String(minute).padStart(2, "0")}`;
   }
 
+  function syncDocumentVersion() {
+    const version = form.querySelector('input[name="version"]:checked')?.value || "general";
+    $("generalTerms").hidden = version === "sales";
+    $("salesTerms").hidden = version !== "sales";
+    const laptopDocument = $("laptopDocument");
+    if (laptopDocument) laptopDocument.hidden = version === "general";
+    $("letter").dataset.documentVersion = version;
+    return version;
+  }
+
   function render() {
     const company = companies[$("company").value];
-    const version = form.querySelector('input[name="version"]:checked').value;
     $("companyLogo").src = company.logo;
     $("companyLogo").alt = `${company.name} Logo`;
     $("companyLogo").classList.toggle("company-logo--centered", company.centeredLogo === true);
@@ -179,15 +188,13 @@
     text("outLocation", locationText);
     text("outDocumentDate", formatDate($("documentDate").value));
     text("outTaxId", company.taxId);
-    $("generalTerms").hidden = version === "sales";
-    $("salesTerms").hidden = version !== "sales";
-    const laptopDocument = $("laptopDocument");
-    if (laptopDocument) laptopDocument.hidden = version === "general";
+    syncDocumentVersion();
     void fitTemplateContent();
   }
 
   function printDocument(showHint) {
     if (!form.reportValidity()) return;
+    syncDocumentVersion();
     if (!templateContentFits) {
       const settings = document.querySelector(".template-settings");
       if (settings) settings.open = true;
