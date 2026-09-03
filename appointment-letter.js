@@ -23,6 +23,10 @@
   const $ = (id) => document.getElementById(id);
   const form = $("appointmentForm");
   const pageTitle = document.title;
+  const wordButton = $("printButton");
+  const pdfHint = $("pdfHint");
+  const pdfHintText = pdfHint.textContent;
+  let wordExporterPromise;
   let locationManuallyChanged = false;
   const today = new Date();
   const localToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -47,16 +51,38 @@
     return String(value ?? "").split(/\r?\n/).map(line => line.trim()).filter(Boolean);
   }
 
+  function appendTemplateText(element, line, section) {
+    if (section !== "documents") {
+      element.textContent = line;
+      return;
+    }
+    // Keep company data dynamic when editable list items are rebuilt. Older saved
+    // settings contain the rendered tax ID instead of the original inline span.
+    const parts = line.replace(/(統編[\s：:]*)\d{8}/g, "$1{{公司統編}}")
+      .split("{{公司統編}}");
+    parts.forEach((part, index) => {
+      if (index) {
+        const taxId = document.createElement("span");
+        taxId.dataset.companyTaxId = "";
+        taxId.textContent = companies[$("company").value].taxId;
+        element.append(taxId);
+      }
+      element.append(document.createTextNode(part));
+    });
+  }
+
   function applyTemplateContent(values) {
     editableSections.forEach(item => {
       const node = document.querySelector(item.selector);
-      const lines = templateLines(values[item.key] ?? defaultTemplateContent[item.key]);
+      const preservedElement = item.preserveSelector ? node.querySelector(item.preserveSelector) : null;
+      const preservedText = preservedElement?.textContent.trim() || "";
+      const lines = templateLines(values[item.key] ?? defaultTemplateContent[item.key])
+        .filter(line => !preservedText || line !== preservedText);
       const elements = lines.map(line => {
         const element = document.createElement(item.mode === "list" ? "li" : "p");
-        element.textContent = line;
+        appendTemplateText(element, line, item.key);
         return element;
       });
-      const preservedElement = item.preserveSelector ? node.querySelector(item.preserveSelector) : null;
       node.replaceChildren(...elements);
       if (preservedElement) node.append(preservedElement);
     });
@@ -159,10 +185,13 @@
 
   function syncDocumentVersion() {
     const version = form.querySelector('input[name="version"]:checked')?.value || "general";
-    $("generalTerms").hidden = version === "sales";
-    $("salesTerms").hidden = version !== "sales";
+    const generalTerms = $("generalTerms");
+    const salesTerms = $("salesTerms");
+    const showSales = version === "sales";
+    generalTerms.hidden = showSales;
+    salesTerms.hidden = !showSales;
     const laptopDocument = $("laptopDocument");
-    if (laptopDocument) laptopDocument.hidden = version === "general";
+    if (laptopDocument) laptopDocument.hidden = !showSales;
     $("letter").dataset.documentVersion = version;
     return version;
   }
@@ -187,7 +216,9 @@
       : "";
     text("outLocation", locationText);
     text("outDocumentDate", formatDate($("documentDate").value));
-    text("outTaxId", company.taxId);
+    $("letter").querySelectorAll("#outTaxId, [data-company-tax-id]").forEach(node => {
+      node.textContent = company.taxId;
+    });
     syncDocumentVersion();
     void fitTemplateContent();
   }
@@ -201,10 +232,62 @@
       setTemplateStatus("內容超出版面，請縮短制式文字後再匯出。", true);
       return;
     }
-    $("pdfHint").hidden = !showHint;
+    pdfHint.textContent = pdfHintText;
+    pdfHint.hidden = !showHint;
     const candidateName = $("candidateName").value.trim().replace(/[\\/:*?"<>|]/g, "_");
     document.title = candidateName ? `聘任通知書-${candidateName}` : "聘任通知書";
     requestAnimationFrame(() => window.print());
+  }
+
+  function loadWordExporter() {
+    if (window.AppointmentWordExporter) return Promise.resolve(window.AppointmentWordExporter);
+    if (wordExporterPromise) return wordExporterPromise;
+    wordExporterPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "appointment-word.js?v=20260903-word-export-2";
+      script.onload = () => window.AppointmentWordExporter
+        ? resolve(window.AppointmentWordExporter)
+        : reject(new Error("Word 元件未完成載入"));
+      script.onerror = () => {
+        wordExporterPromise = undefined;
+        script.remove();
+        reject(new Error("Word 元件載入失敗"));
+      };
+      document.head.append(script);
+    });
+    return wordExporterPromise;
+  }
+
+  async function downloadWord() {
+    if (!form.reportValidity()) return;
+    syncDocumentVersion();
+    if (!templateContentFits) {
+      const settings = document.querySelector(".template-settings");
+      if (settings) settings.open = true;
+      setTemplateStatus("內容超出版面，請縮短制式文字後再匯出。", true);
+      return;
+    }
+    const company = companies[$("company").value];
+    const letter = $("letter").cloneNode(true);
+    const candidateName = $("candidateName").value.trim().replace(/[\\/:*?"<>|]/g, "_");
+    const filename = candidateName ? `聘任通知書-${candidateName}` : "聘任通知書";
+    const originalLabel = wordButton.textContent;
+    wordButton.disabled = true;
+    wordButton.textContent = "建立 Word…";
+    pdfHint.hidden = true;
+    try {
+      const exporter = await loadWordExporter();
+      await exporter.download({ filename, companyName: company.name, logoUrl: company.logo, letter });
+      pdfHint.textContent = "Word 文件已下載。";
+      pdfHint.hidden = false;
+    } catch (error) {
+      console.error(error);
+      pdfHint.textContent = "Word 建立失敗，請重新整理後再試。";
+      pdfHint.hidden = false;
+    } finally {
+      wordButton.disabled = false;
+      wordButton.textContent = originalLabel;
+    }
   }
 
   form.addEventListener("input", render);
@@ -235,10 +318,12 @@
       render();
     }, 0);
   });
-  $("printButton").addEventListener("click", () => printDocument(false));
+  wordButton.textContent = "下載 Word";
+  wordButton.addEventListener("click", downloadWord);
   $("pdfButton").addEventListener("click", () => printDocument(true));
   window.addEventListener("afterprint", () => {
-    $("pdfHint").hidden = true;
+    pdfHint.hidden = true;
+    pdfHint.textContent = pdfHintText;
     document.title = pageTitle;
   });
   $("location").value = companies[$("company").value].defaultLocation;
