@@ -223,7 +223,7 @@
     void fitTemplateContent();
   }
 
-  function printDocument(showHint) {
+  async function downloadPdf() {
     if (!form.reportValidity()) return;
     syncDocumentVersion();
     if (!templateContentFits) {
@@ -232,11 +232,15 @@
       setTemplateStatus("內容超出版面，請縮短制式文字後再匯出。", true);
       return;
     }
-    pdfHint.textContent = pdfHintText;
-    pdfHint.hidden = !showHint;
-    const candidateName = $("candidateName").value.trim().replace(/[\\/:*?"<>|]/g, "_");
-    document.title = candidateName ? `聘任通知書-${candidateName}` : "聘任通知書";
-    requestAnimationFrame(() => window.print());
+    try {
+      await import("./pdf-export.js?v=20260903-direct-pdf-1");
+      await window.HrPdf.download({ root: $("letter"), title: "聘任通知書", name: $("candidateName").value,
+        button: $("pdfButton"), status: pdfHint });
+    } catch (error) {
+      pdfHint.hidden = false;
+      pdfHint.textContent = "PDF 元件載入失敗，請重新整理後再試。";
+      console.error(error);
+    }
   }
 
   function loadWordExporter() {
@@ -320,7 +324,7 @@
   });
   wordButton.textContent = "下載 Word";
   wordButton.addEventListener("click", downloadWord);
-  $("pdfButton").addEventListener("click", () => printDocument(true));
+  $("pdfButton").addEventListener("click", downloadPdf);
   window.addEventListener("afterprint", () => {
     pdfHint.hidden = true;
     pdfHint.textContent = pdfHintText;

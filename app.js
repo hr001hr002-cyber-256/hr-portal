@@ -300,11 +300,23 @@ function officialInvoluntaryPdf(c){
 installOfficialReasonOptions();
 involuntaryPdf=officialInvoluntaryPdf;
 let previewZoomed=false;
+let previewDocumentType='';
 function fitDocumentPreview(){const preview=document.querySelector('#documentPreview'),dialog=document.querySelector('#documentDialog');if(!dialog.open)return;preview.style.setProperty('--preview-scale','1');const available=Math.max(280,dialog.clientWidth-24),paperWidth=preview.getBoundingClientRect().width,fit=Math.min(1,available/paperWidth),scale=previewZoomed&&innerWidth<=760?Math.min(1,Math.max(.72,fit)):fit;preview.style.setProperty('--preview-scale',String(scale));document.querySelector('#togglePreviewZoom').textContent=previewZoomed?'符合寬度':'放大閱讀';dialog.classList.toggle('preview-zoomed',previewZoomed)}
 installResignationApplicationUI();
-document.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>{if(!latest)return;const type=b.dataset.doc;previewZoomed=false;const titles={notice:'資遣通知書',average:'平均工資計算明細',service:'離職證明單',involuntary:'非自願離職證明書',resignation:'離職申請書',combined:'合併文件'};const preview=document.querySelector('#documentPreview');preview.classList.toggle('combined-preview',type==='combined');document.querySelector('#dialogTitle').textContent=`${titles[type]}－列印／另存 PDF`;preview.innerHTML=type==='combined'?combinedPdf(latest):type==='notice'?noticePdf(latest):type==='average'?averagePdf(latest):type==='service'?servicePdf(latest):type==='resignation'?resignationApplicationPdf(latest):involuntaryPdf(latest);document.querySelector('#documentDialog').showModal();requestAnimationFrame(fitDocumentPreview)});
+document.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>{if(!latest)return;const type=b.dataset.doc;previewDocumentType=type;previewZoomed=false;const titles={notice:'資遣通知書',average:'平均工資計算明細',service:'離職證明單',involuntary:'非自願離職證明書',resignation:'離職申請書',combined:'合併文件'};const preview=document.querySelector('#documentPreview');preview.classList.toggle('combined-preview',type==='combined');document.querySelector('#dialogTitle').textContent=`${titles[type]}－下載 PDF`;preview.innerHTML=type==='combined'?combinedPdf(latest):type==='notice'?noticePdf(latest):type==='average'?averagePdf(latest):type==='service'?servicePdf(latest):type==='resignation'?resignationApplicationPdf(latest):involuntaryPdf(latest);document.querySelector('#documentDialog').showModal();requestAnimationFrame(fitDocumentPreview)});
 document.querySelector('#togglePreviewZoom').onclick=()=>{previewZoomed=!previewZoomed;fitDocumentPreview()};
 window.addEventListener('resize',fitDocumentPreview);
 document.querySelector('#closeDialog').onclick=()=>document.querySelector('#documentDialog').close();
-document.querySelector('#printDocument').onclick=()=>window.print();
+document.querySelector('#printDocument').textContent='下載 PDF';
+document.querySelector('#printDocument').onclick=async()=>{
+  if(!latest||!previewDocumentType)return;
+  const titles={notice:'資遣通知書',average:'平均工資計算明細',service:'離職證明單',involuntary:'非自願離職證明書',resignation:'離職申請書'};
+  try{
+    await import('./pdf-export.js?v=20260907-calculator-visible-1');
+    await window.HrPdf.download({root:document.querySelector('#documentPreview'),
+      title:titles[previewDocumentType],name:latest.fd.employeeName,
+      fileName:previewDocumentType==='combined'?`離職及資遣合併文件-${latest.fd.employeeName}`:undefined,
+      button:document.querySelector('#printDocument'),revealPrintBody:true});
+  }catch(error){alert('PDF 元件載入失敗，請重新整理後再試。');console.error(error)}
+};
 addWageRow();

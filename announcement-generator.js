@@ -649,17 +649,9 @@
     button.disabled = true;
     document.getElementById("actionHint").textContent = "正在建立 PDF…";
     try {
-      await document.fonts.ready;
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
-      const pages = Array.from(preview.querySelectorAll(".announcement-page"));
-      for (let index = 0; index < pages.length; index += 1) {
-        if (index) pdf.addPage("a4", "portrait");
-        const canvas = await html2canvas(pages[index], { scale: 2, backgroundColor: "#ffffff", logging: false, useCORS: true });
-        pdf.addImage(canvas.toDataURL("image/jpeg", .96), "JPEG", 0, 0, 210, 297, undefined, "FAST");
-      }
-      pdf.save(`${safeFilename()}.pdf`);
-      document.getElementById("actionHint").textContent = "PDF 已建立。";
+      await import("./pdf-export.js?v=20260903-direct-pdf-1");
+      await window.HrPdf.download({ root: preview, fileName: safeFilename(), button,
+        status: document.getElementById("actionHint") });
     } catch (error) {
       console.error(error);
       document.getElementById("actionHint").textContent = "PDF 建立失敗，請重新整理後再試。";
