@@ -8,6 +8,30 @@
   const error = document.getElementById("authError");
   const button = document.getElementById("authButton");
 
+  function installPasswordToggle() {
+    const field = document.createElement("span");
+    field.className = "auth-password-field";
+    password.parentNode.insertBefore(field, password);
+    field.append(password);
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "auth-password-toggle";
+    toggle.textContent = "顯示";
+    toggle.setAttribute("aria-controls", password.id);
+    toggle.setAttribute("aria-pressed", "false");
+    toggle.setAttribute("aria-label", "顯示密碼");
+    toggle.addEventListener("click", () => {
+      const showPassword = password.type === "password";
+      password.type = showPassword ? "text" : "password";
+      toggle.textContent = showPassword ? "隱藏" : "顯示";
+      toggle.setAttribute("aria-pressed", String(showPassword));
+      toggle.setAttribute("aria-label", showPassword ? "隱藏密碼" : "顯示密碼");
+      password.focus({ preventScroll: true });
+    });
+    field.append(toggle);
+  }
+
   function bytes(base64) {
     return Uint8Array.from(atob(base64), char => char.charCodeAt(0));
   }
@@ -65,5 +89,6 @@
     }
   });
 
+  installPasswordToggle();
   restoreSession();
 })();
