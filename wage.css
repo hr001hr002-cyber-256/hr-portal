@@ -6,7 +6,10 @@
 .roc-date-picker{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;width:100%}
 .roc-date-picker .roc-date{min-width:0}
 .roc-calendar-button{border:1px solid #294f43;border-radius:9px;padding:8px 12px;background:#fff;color:#294f43;white-space:nowrap;cursor:pointer}
-.native-date-picker{position:absolute;right:0;bottom:0;width:1px;height:1px;padding:0;border:0;opacity:0;pointer-events:none}
+.roc-native-date-trigger{position:relative;display:block;min-width:92px;height:44px}
+.roc-native-date-trigger .roc-calendar-button{width:100%;height:44px;margin:0}
+.roc-native-date-trigger .native-date-picker{position:absolute;inset:0;z-index:2;width:100%;height:44px;min-height:44px;margin:0;padding:0;border:0;opacity:0;pointer-events:auto;touch-action:manipulation;cursor:pointer}
+.roc-native-date-trigger:focus-within .roc-calendar-button{outline:3px solid rgba(41,79,67,.2);outline-offset:2px}
 @media(max-width:760px){
   .wage-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 42px;gap:10px;padding:14px;margin-bottom:14px;border:1px solid #d9dfdc;border-radius:12px;background:#f8faf9}
   .wage-field{grid-column:span 1;font-size:13px;gap:4px}

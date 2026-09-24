@@ -35,11 +35,13 @@ function installRocDateInputs(){
     const wrap=document.createElement('span');wrap.className='roc-date-picker';input.before(wrap);wrap.append(input);
     const button=document.createElement('button');button.type='button';button.className='roc-calendar-button';button.setAttribute('aria-label','開啟日期選單');button.textContent='選擇日期';
     const picker=document.createElement('input');picker.type='date';picker.className='native-date-picker';picker.tabIndex=-1;picker.setAttribute('aria-label','西元日期選單');
-    wrap.append(button,picker);
+    const trigger=document.createElement('span');trigger.className='roc-native-date-trigger';trigger.append(button,picker);wrap.append(trigger);
     const syncFromText=()=>{if(!input.value){picker.value='';input.setCustomValidity('');return}const parsed=date(input.value);if(!parsed){input.setCustomValidity('請使用民國年月日格式，例如：民國115年07月30日');return}input.value=ymd(parsed);picker.value=iso(parsed);input.setCustomValidity('')};
     input.addEventListener('input',()=>input.setCustomValidity(''));
     input.addEventListener('blur',syncFromText);
-    picker.addEventListener('change',()=>{const parsed=date(picker.value);input.value=parsed?ymd(parsed):'';input.setCustomValidity('');input.dispatchEvent(new Event('change',{bubbles:true}))});
+    const syncFromPicker=()=>{const parsed=date(picker.value);if(!parsed)return;input.value=ymd(parsed);input.setCustomValidity('');input.dispatchEvent(new Event('change',{bubbles:true}))};
+    picker.addEventListener('input',syncFromPicker);
+    picker.addEventListener('change',syncFromPicker);
     button.addEventListener('click',()=>{if(typeof picker.showPicker==='function')picker.showPicker();else picker.click()});
     syncFromText();
   });
