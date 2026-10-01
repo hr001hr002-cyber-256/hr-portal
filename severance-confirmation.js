@@ -20,7 +20,7 @@
     const sync=()=>{if(!text.value){text.setCustomValidity("");text.classList.remove("native-date-error");picker.value="";return true}const d=parseDate(text.value);if(!d){text.setCustomValidity("請輸入有效日期，例如 1000803、1150803 或 20260803");text.classList.add("native-date-error");return false}text.value=roc(d);picker.value=iso(d);text.setCustomValidity("");text.classList.remove("native-date-error");render();return true};
     text.addEventListener("input",()=>{text.setCustomValidity("");text.classList.remove("native-date-error")});text.addEventListener("blur",sync);
     const applyPicker=()=>{const d=parseDate(picker.value);if(!d)return;text.value=roc(d);sync()};picker.addEventListener("input",applyPicker);picker.addEventListener("change",applyPicker);
-    choose.addEventListener("click",()=>typeof picker.showPicker==="function"?picker.showPicker():picker.click());
+    choose.addEventListener("click",()=>{picker.focus({preventScroll:true});if(typeof picker.showPicker==="function"){try{picker.showPicker();return}catch(_error){}}picker.click()});
     today.addEventListener("click",()=>{text.value=roc(new Date());sync()});
     return sync;
   }
