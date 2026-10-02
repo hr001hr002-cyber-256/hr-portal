@@ -68,8 +68,8 @@
     if(!validate())return;
     fitDialog();
     try{
-      await import("./pdf-export.js?v=20260903-direct-pdf-1");
-      await window.HrPdf.download({root:$("dialogPaper"),fileName:exportBaseName(),button:$("printPdf")});
+      await import("./pdf-export.js?v=20261002-severance-a4-profile-2");
+      await window.HrPdf.download({root:$("dialogPaper"),fileName:exportBaseName(),button:$("printPdf"),profile:"severance-confirmation-word"});
     }catch(error){alert("PDF 元件載入失敗，請重新整理後再試。");console.error(error)}
   });
   $("previewPdf").addEventListener("click",()=>{if(!validate())return;$("pdfDialog").showModal();requestAnimationFrame(fitDialog)});$("closeDialog").addEventListener("click",()=>$("pdfDialog").close());$("toggleZoom").addEventListener("click",()=>{$("pdfDialog").classList.toggle("zoomed");$("toggleZoom").textContent=$("pdfDialog").classList.contains("zoomed")?"符合寬度":"放大閱讀"});$("downloadWord").addEventListener("click",downloadWord);window.addEventListener("resize",fitDialog);form.addEventListener("input",render);form.addEventListener("change",render);form.addEventListener("reset",()=>setTimeout(()=>{message.textContent="";$("documentDate").value=roc(new Date());syncDates.forEach(fn=>fn());render()},0));$("documentDate").value=roc(new Date());syncDates.forEach(fn=>fn());render();

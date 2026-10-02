@@ -1,14 +1,16 @@
 (() => {
   "use strict";
 
-  const TOOL_ID = "appointment-letter";
-  const SESSION_KEY = "soberHrV2Session:appointment-letter:v1";
+  const pageConfig = window.HR_V2_TOOL_CONFIG || {};
+  const TOOL_ID = pageConfig.toolId || "appointment-letter";
+  const PAYLOAD_GLOBAL = pageConfig.payloadGlobal || "APPOINTMENT_LETTER_V2_PAYLOAD";
+  const SESSION_KEY = pageConfig.sessionKey || `soberHrV2Session:${TOOL_ID}:v1`;
   const SESSION_SCHEMA = "2.0-session";
   const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
   const V2 = window.HrV2Crypto;
   const vault = window.HR_KEY_VAULT;
   const manifest = window.HR_V2_MANIFEST;
-  const payload = window.APPOINTMENT_LETTER_V2_PAYLOAD;
+  const payload = window[PAYLOAD_GLOBAL];
   const form = document.getElementById("authForm");
   const password = document.getElementById("accessPassword");
   const error = document.getElementById("authError");

@@ -51,7 +51,7 @@
     }).join("\n");
   }
 
-  function snapshot(root) {
+  function snapshot(root, profile = "") {
     const sheets = [...document.styleSheets].filter(sheet => !sheet.disabled);
     const styles = sheets.map(sheet => {
       try { return exportRules(sheet.cssRules); }
@@ -60,7 +60,14 @@
     const pages = physicalPages(root).map(page => {
       const copy = page.cloneNode(true);
       copy.classList.add("pdf-export-page");
+      if (profile) copy.dataset.pdfProfile = profile;
       copy.removeAttribute("hidden");
+      if (profile === "severance-confirmation-word") {
+        const footer = document.createElement("div");
+        footer.className = "pdf-export-footer";
+        footer.textContent = "SOBER HR Tools | 資遣確認單";
+        copy.append(footer);
+      }
       let tree = copy;
       for (let ancestor = page.parentElement; ancestor && ancestor !== document.body; ancestor = ancestor.parentElement) {
         const shell = ancestor.cloneNode(false);
@@ -111,6 +118,30 @@
       [data-pdf-ancestor]{display:block!important;position:static!important;inset:auto!important;width:210mm!important;height:auto!important;min-height:0!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;overflow:visible!important;transform:none!important;zoom:1!important;box-shadow:none!important}
       .pdf-export-page{display:block!important;box-sizing:border-box!important;width:210mm!important;min-width:210mm!important;max-width:210mm!important;min-height:297mm!important;max-height:none!important;margin:0!important;border:0!important;box-shadow:none!important;transform:none!important;zoom:1!important;background:#fff!important;overflow:hidden!important}
       .pdf-export-page [hidden]{display:none!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"]{display:flex!important;flex-direction:column!important;height:297mm!important;min-height:297mm!important;padding:14mm 16mm 6.2mm!important;font-size:10pt!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-head h2{font-size:22pt!important;line-height:1.15!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-section,.pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-note{position:relative!important;left:-2.2mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-head+.doc-section{margin-top:4.44mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-section{margin-top:7.23mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .section-title{height:10.67mm!important;min-height:10.67mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .section-title b{width:9.14mm!important;font-size:10pt!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .section-title span{display:flex!important;align-items:center!important;padding:0 2.2mm!important;font-size:11pt!important;line-height:1!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-table{font-size:10pt!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-table th,.pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-table td{padding:1.8mm 2mm!important;line-height:12.6pt!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-table:not(.narrative):not(.signature) th{width:14.6%!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-table:not(.narrative):not(.signature) td{width:35.4%!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-table:not(.narrative):not(.signature) tr{height:10.58mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .narrative th{width:19.1%!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .narrative td{width:80.9%!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .narrative tr:nth-child(1) td{height:25.4mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .narrative tr:nth-child(2) td{height:35.56mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .narrative tr:nth-child(3) td{height:19.48mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .signature tr:first-child{height:10.58mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .signature td{height:23.71mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .internal-grid{grid-auto-rows:10mm!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .internal-grid span{display:flex!important;align-items:center!important;padding:0 2mm!important;font-size:10pt!important;line-height:12.6pt!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .doc-note{margin-top:2mm!important;font-size:8.5pt!important;line-height:1.5!important}
+      .pdf-export-page[data-pdf-profile="severance-confirmation-word"] .pdf-export-footer{margin-top:auto;text-align:center;color:#68716d;font-size:8.5pt;line-height:1.2}
     `;
     doc.head.append(style);
     doc.body.className = state.bodyClass;
@@ -132,7 +163,7 @@
     setTimeout(() => { URL.revokeObjectURL(link.href); link.remove(); }, 300000);
   }
 
-  async function download({ root, title, name = "", fileName, button, status, revealPrintBody = false }) {
+  async function download({ root, title, name = "", fileName, button, status, revealPrintBody = false, profile = "" }) {
     if (busy) return;
     if (!root) throw new Error("找不到文件預覽");
     busy = true;
@@ -149,7 +180,7 @@
     let frame;
     try {
       // Snapshot before any await: later edits cannot change an export in progress.
-      const state = snapshot(root);
+      const state = snapshot(root, profile);
       if (!state.pages.length) throw new Error("目前沒有可匯出的頁面");
       await Promise.all([
         loadLibrary("vendor/html2canvas.min.js", () => !!window.html2canvas),
