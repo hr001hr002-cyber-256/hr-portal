@@ -2,6 +2,7 @@ const form=document.querySelector('#severanceForm');
 const wageRows=document.querySelector('#wageRows');
 const results=document.querySelector('#results');
 const money=new Intl.NumberFormat('zh-TW',{style:'currency',currency:'TWD',maximumFractionDigits:0});
+const calculationMoney=new Intl.NumberFormat('zh-TW',{style:'currency',currency:'TWD',maximumFractionDigits:6});
 let latest=null;
 
 const COMPANIES={
@@ -80,8 +81,13 @@ function setDepartureFlow(){
 form.elements.departureType.onchange=setDepartureFlow;
 
 function readWages(){return[...wageRows.children].map(r=>{const original=+r.querySelector('.original').value||0,bonus=+r.querySelector('.bonus').value||0,partialDays=Math.floor(+r.querySelector('.partialDays').value||0),leaveHours=Math.max(0,+r.querySelector('.leaveHours').value||0),lateMinutes=Math.floor(+r.querySelector('.lateMinutes').value||0),otherExclude=+r.querySelector('.otherExclude').value||0;return{period:r.querySelector('.period').value.trim(),original,bonus,partialDays,leaveHours,lateMinutes,otherExclude,partialDeduction:Math.floor(original/30*partialDays),leaveDeduction:Math.floor(original/30/8*leaveHours),lateDeduction:Math.floor(original/30/8/60*lateMinutes),net:netWage(r)}}).filter(x=>x.original||x.bonus||x.period)}
-function newBasis(s,e){if(s>e)return{duration:{years:0,months:0,days:0,totalDays:0},basis:0};const d=diffYmd(s,e);return{duration:d,basis:d.years+(d.months+d.days/30)/12}}
+function newBasis(s,e){
+  if(s>e)return{duration:{years:0,months:0,days:0,totalDays:0},basis:0};
+  const duration=diffYmd(s,e),partialYears=(duration.months+duration.days/30)/12;
+  return{duration,basis:duration.years+partialYears};
+}
 function oldBasis(s,e){if(s>e)return{duration:{years:0,months:0,days:0,totalDays:0},basis:0};const d=diffYmd(s,e);return{duration:d,basis:d.years+Math.ceil(d.months+(d.days?1:0))/12}}
+function newSeveranceAmounts(monthly,newUnits,oldUnits){const newWage=Math.round(monthly),newRaw=newWage*newUnits,oldRaw=monthly*oldUnits,raw=newRaw+oldRaw;return{newWage,newRaw,oldRaw,raw,total:Math.ceil(raw)}}
 function tenureParts(s,e,system,transition){if(system==='new')return{newPart:newBasis(s,e),oldPart:oldBasis(e,plus(e,-1))};if(system==='old')return{newPart:newBasis(e,plus(e,-1)),oldPart:oldBasis(s,e)};if(!transition)throw Error('請填寫轉換新制日期');return{oldPart:oldBasis(s,plus(transition,-1)),newPart:newBasis(transition,e)}}
 function calculate(){
   const fd=Object.fromEntries(new FormData(form)),start=date(fd.startDate),end=date(fd.endDate);
@@ -97,8 +103,8 @@ function calculate(){
   const noticeDays=noticeApplies?(completedMonths>=36?30:completedMonths>=12?20:completedMonths>=3?10:0):0;
   const latestNormalWage=sortedWages[0]?.original||0,noticeMonthly=Math.max(monthly,latestNormalWage),noticeDaily=noticeMonthly/30;
   const latestNotice=noticeDays?plus(end,-noticeDays):null,actual=date(fd.actualNoticeDate),displayNoticeDate=actual||latestNotice,actualDays=actual?days(actual,end):0,shortNotice=Math.max(0,noticeDays-actualDays),noticePay=shortNotice*noticeDaily;
-  const parts=tenureParts(start,end,fd.pensionSystem,date(fd.transitionDate)),newUnits=Math.min(parts.newPart.basis*.5,6),oldUnits=parts.oldPart.basis,severanceRaw=monthly*(newUnits+oldUnits),severance=Math.ceil(severanceRaw);
-  return{fd,start,end,tenure,wages,averageWages,totalNet,fullSix,daily,monthly,latestNormalWage,noticeMonthly,noticeDays,latestNotice,displayNoticeDate,actualDays,shortNotice,noticeDaily,noticePay,parts,newUnits,oldUnits,severance};
+  const parts=tenureParts(start,end,fd.pensionSystem,date(fd.transitionDate)),newUnits=Math.min(parts.newPart.basis*.5,6),oldUnits=parts.oldPart.basis,severanceAmounts=newSeveranceAmounts(monthly,newUnits,oldUnits),severance=severanceAmounts.total;
+  return{fd,start,end,tenure,wages,averageWages,totalNet,fullSix,daily,monthly,latestNormalWage,noticeMonthly,noticeDays,latestNotice,displayNoticeDate,actualDays,shortNotice,noticeDaily,noticePay,parts,newUnits,oldUnits,severanceAmounts,severance};
 }
 function voluntaryContext(){const fd=Object.fromEntries(new FormData(form)),start=date(fd.startDate),end=date(fd.endDate);if(!start||!end||end<start)throw Error('請確認到職日與離職日');return{fd,start,end,tenure:diffYmd(start,end)}}
 function setResultMode(voluntary){
@@ -119,7 +125,8 @@ function render(c){
   document.querySelector('#severancePay').textContent=money.format(c.severance);
   document.querySelector('#severanceDetail').textContent=`新制 ${c.newUnits.toFixed(4)} 個基數；舊制 ${c.oldUnits.toFixed(4)} 個基數`;
   const noticeBasis=c.latestNormalWage>=c.monthly?'最近一個月正常工資':'最近六個月平均工資';
-  document.querySelector('#calculationSheet').innerHTML=`<div class="calc-row"><span>總年資</span><b>離職日－到職日＋1＝${c.tenure.totalDays}日（${duration(c.tenure)}）</b></div><div class="calc-row"><span>最近六個月平均工資</span><b>${money.format(c.totalNet)} ${c.fullSix?'÷ 6個月':`÷ ${c.tenure.totalDays}日 × 30`}＝${money.format(c.monthly)}</b></div><div class="calc-row"><span>最近一個月正常工資</span><b>${money.format(c.latestNormalWage)}</b></div><div class="calc-row"><span>預告工資採用基準</span><b>${noticeBasis}（兩者取高）＝${money.format(c.noticeMonthly)}</b></div><div class="calc-row"><span>資遣費</span><b>${money.format(c.monthly)} × (${c.newUnits.toFixed(6)}＋${c.oldUnits.toFixed(6)})＝${money.format(c.severance)}</b></div><div class="calc-row"><span>預告期間工資（另列）</span><b>${money.format(c.noticeMonthly)} ÷ 30 × ${c.shortNotice}日＝${money.format(c.noticePay)}</b></div>${c.noticePay>0?`<div class="calc-row final-payment-row"><span>最終應支付金額</span><b>${money.format(c.severance)} ＋ ${money.format(c.noticePay)} ＝ ${money.format(c.severance+c.noticePay)}</b></div>`:''}`;
+  const severanceFormula=c.oldUnits?`${money.format(c.severanceAmounts.newWage)} × ${c.newUnits.toFixed(6)} ＋ ${calculationMoney.format(c.monthly)} × ${c.oldUnits.toFixed(6)}`:`${money.format(c.severanceAmounts.newWage)} × ${c.newUnits.toFixed(6)}`;
+  document.querySelector('#calculationSheet').innerHTML=`<div class="calc-row"><span>總年資</span><b>離職日－到職日＋1＝${c.tenure.totalDays}日（${duration(c.tenure)}）</b></div><div class="calc-row"><span>最近六個月平均工資</span><b>${money.format(c.totalNet)} ${c.fullSix?'÷ 6個月':`÷ ${c.tenure.totalDays}日 × 30`}＝${money.format(c.monthly)}</b></div><div class="calc-row"><span>最近一個月正常工資</span><b>${money.format(c.latestNormalWage)}</b></div><div class="calc-row"><span>預告工資採用基準</span><b>${noticeBasis}（兩者取高）＝${money.format(c.noticeMonthly)}</b></div><div class="calc-row"><span>資遣費</span><b>${severanceFormula}＝${money.format(c.severance)}</b></div><div class="calc-row"><span>預告期間工資（另列）</span><b>${money.format(c.noticeMonthly)} ÷ 30 × ${c.shortNotice}日＝${money.format(c.noticePay)}</b></div>${c.noticePay>0?`<div class="calc-row final-payment-row"><span>最終應支付金額</span><b>${money.format(c.severance)} ＋ ${money.format(c.noticePay)} ＝ ${money.format(c.severance+c.noticePay)}</b></div>`:''}`;
   results.scrollIntoView({behavior:'smooth'});
 }
 form.onsubmit=e=>{e.preventDefault();const msg=document.querySelector('#formMessage');msg.textContent='';if(!form.reportValidity())return;try{form.elements.departureType.value==='voluntary'?renderVoluntary(voluntaryContext()):render(calculate())}catch(err){msg.textContent=err.message}};
