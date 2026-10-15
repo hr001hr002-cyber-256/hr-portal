@@ -134,6 +134,22 @@ form.onreset=()=>setTimeout(()=>{wageRows.innerHTML='';addWageRow();results.hidd
 
 function setCell(xml,address,value){const doc=new DOMParser().parseFromString(xml,'application/xml'),ns=doc.documentElement.namespaceURI;let cell=[...doc.getElementsByTagNameNS(ns,'c')].find(x=>x.getAttribute('r')===address);if(!cell){const rowNum=address.match(/\d+/)[0];let row=[...doc.getElementsByTagNameNS(ns,'row')].find(x=>x.getAttribute('r')===rowNum);if(!row){row=doc.createElementNS(ns,'row');row.setAttribute('r',rowNum);doc.getElementsByTagNameNS(ns,'sheetData')[0].appendChild(row)}cell=doc.createElementNS(ns,'c');cell.setAttribute('r',address);row.appendChild(cell)}[...cell.children].forEach(x=>{if(['v','f','is'].includes(x.localName))x.remove()});cell.setAttribute('t','inlineStr');const is=doc.createElementNS(ns,'is'),t=doc.createElementNS(ns,'t');t.textContent=String(value??'');is.appendChild(t);cell.appendChild(is);return new XMLSerializer().serializeToString(doc)}
 function saveBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+let averageExcelLoader;
+function loadAverageExcel(){
+  if(window.HrAverageExcel)return Promise.resolve(window.HrAverageExcel);
+  if(!averageExcelLoader)averageExcelLoader=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='../average-excel.js?v=20261014-average-wage-layout-2';script.onload=()=>window.HrAverageExcel?resolve(window.HrAverageExcel):reject(Error('Excel 元件載入失敗'));script.onerror=()=>reject(Error('Excel 元件載入失敗'));document.head.append(script)});
+  return averageExcelLoader;
+}
+function averageExcelModel(c){
+  const company=COMPANIES[c.fd.companyKey],periods=[...c.averageWages].sort((a,b)=>periodValue(a.period)-periodValue(b.period)),noticeBasis=c.latestNormalWage>=c.monthly?'最近一個月正常工資':'最近六個月平均工資';
+  return{companyName:company.name,employeeName:c.fd.employeeName,calculationType:c.fullSix?'滿六個月':'未滿六個月',fullSix:c.fullSix,startDate:roc(c.start),endDate:roc(c.end),tenureText:`${c.tenure.totalDays}日（${duration(c.tenure)}）`,tenureDays:c.tenure.totalDays,departmentTitle:`${c.fd.department}／${c.fd.jobTitle}`,calculationPeriod:periods.length?`${periods[0].period} ～ ${periods.at(-1).period}`:'',wages:c.averageWages.map(w=>({period:w.period,original:Math.round(w.original),bonus:Math.round(w.bonus||0),partialDeduction:Math.round(w.partialDeduction),leaveDeduction:Math.round(w.leaveDeduction),lateDeduction:Math.round(w.lateDeduction),otherExclude:Math.round(w.otherExclude),net:Math.round(w.net)})),totalNet:Math.round(c.totalNet),averageWage:Math.round(c.monthly),severance:c.severance,noticeDays:c.noticeDays,noticeDate:c.displayNoticeDate?roc(c.displayNoticeDate):'無',latestNormalWage:Math.round(c.latestNormalWage),noticeBasis:`${noticeBasis}：${Math.round(c.noticeMonthly).toLocaleString()} 元`,noticePay:Math.round(c.noticePay)};
+}
+async function downloadAverageExcel(c,button){
+  const original=button.textContent;button.disabled=true;button.textContent='建立 Excel 中…';
+  try{const excel=await loadAverageExcel(),blob=await excel.createWorkbook(averageExcelModel(c));saveBlob(blob,excel.fileName(c.fd.employeeName))}
+  catch(error){alert(`無法產生 Excel：${error.message}`)}
+  finally{button.disabled=false;button.textContent=original}
+}
 async function downloadExcel(c){
   try{
     const res=await fetch('../templates/資遣通知書-現版.xlsx');if(!res.ok)throw Error('找不到 Excel 範本');const zip=await JSZip.loadAsync(await res.arrayBuffer());
@@ -203,6 +219,18 @@ function installResignationApplicationUI(){
   combined.className='combined-doc-button';
   combined.textContent='一鍵合併全部文件 PDF';
   container.append(combined);
+}
+
+function installAverageExcelUI(){
+  const pdfButton=document.querySelector('[data-doc="average"]');
+  if(!pdfButton||document.querySelector('[data-average-excel]'))return;
+  const button=document.createElement('button');
+  button.type='button';
+  button.dataset.averageExcel='';
+  button.dataset.involuntary='';
+  button.textContent='下載 Excel';
+  button.onclick=()=>{if(latest)downloadAverageExcel(latest,button)};
+  pdfButton.after(button);
 }
 
 function combinedPdf(c){
@@ -322,6 +350,7 @@ function pdfStatus(){
 function clearPdfStatus(){clearTimeout(pdfStatusTimer);const status=document.querySelector('#documentPdfStatus');if(!status)return;status.replaceChildren();status.hidden=true}
 function fitDocumentPreview(){const preview=document.querySelector('#documentPreview'),dialog=document.querySelector('#documentDialog');if(!dialog.open)return;preview.style.setProperty('--preview-scale','1');const available=Math.max(280,dialog.clientWidth-24),paperWidth=preview.getBoundingClientRect().width,fit=Math.min(1,available/paperWidth),scale=previewZoomed&&innerWidth<=760?Math.min(1,Math.max(.72,fit)):fit;preview.style.setProperty('--preview-scale',String(scale));document.querySelector('#togglePreviewZoom').textContent=previewZoomed?'符合寬度':'放大閱讀';dialog.classList.toggle('preview-zoomed',previewZoomed)}
 installResignationApplicationUI();
+installAverageExcelUI();
 document.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>{if(!latest)return;clearPdfStatus();const type=b.dataset.doc;previewDocumentType=type;previewZoomed=false;const titles={notice:'資遣通知書',average:'平均工資計算明細',service:'離職證明單',involuntary:'非自願離職證明書',resignation:'離職申請書',combined:'合併文件'};const preview=document.querySelector('#documentPreview');preview.classList.toggle('combined-preview',type==='combined');document.querySelector('#dialogTitle').textContent=`${titles[type]}－下載 PDF`;preview.innerHTML=type==='combined'?combinedPdf(latest):type==='notice'?noticePdf(latest):type==='average'?averagePdf(latest):type==='service'?servicePdf(latest):type==='resignation'?resignationApplicationPdf(latest):involuntaryPdf(latest);document.querySelector('#documentDialog').showModal();requestAnimationFrame(fitDocumentPreview)});
 document.querySelector('#togglePreviewZoom').onclick=()=>{previewZoomed=!previewZoomed;fitDocumentPreview()};
 window.addEventListener('resize',fitDocumentPreview);
