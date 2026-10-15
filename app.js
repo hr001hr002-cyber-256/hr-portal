@@ -150,6 +150,22 @@ async function downloadAverageExcel(c,button){
   catch(error){alert(`無法產生 Excel：${error.message}`)}
   finally{button.disabled=false;button.textContent=original}
 }
+let noticeExcelLoader;
+function loadNoticeExcel(){
+  if(window.HrNoticeExcel)return Promise.resolve(window.HrNoticeExcel);
+  if(!noticeExcelLoader)noticeExcelLoader=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='../notice-excel.js?v=20261015-severance-notice-excel-1';script.onload=()=>window.HrNoticeExcel?resolve(window.HrNoticeExcel):reject(Error('Excel 元件載入失敗'));script.onerror=()=>reject(Error('Excel 元件載入失敗'));document.head.append(script)});
+  return noticeExcelLoader;
+}
+function noticeExcelModel(c){
+  const company=COMPANIES[c.fd.companyKey];
+  return{companyName:company.name,employeeName:c.fd.employeeName,employeeId:c.fd.employeeId,employeeAddress:c.fd.employeeAddress,employeePhone:c.fd.employeePhone,department:c.fd.department,jobTitle:c.fd.jobTitle,noticeDays:c.noticeDays,actualNoticeDate:c.fd.actualNoticeDate?roc(c.fd.actualNoticeDate):'無',legalBasis:legalBasisLabel(c.fd.legalBasis),reasonDetail:c.fd.reasonDetail,startDate:roc(c.start),tenureDays:c.tenure.totalDays,endDate:roc(c.end),settlementDate:roc(c.fd.settlementDate),averageWage:Math.round(c.monthly),severance:c.severance,noticePay:Math.round(c.noticePay)};
+}
+async function downloadNoticeExcel(c,button){
+  const original=button.textContent;button.disabled=true;button.textContent='建立 Excel 中…';
+  try{const excel=await loadNoticeExcel(),blob=await excel.createWorkbook(noticeExcelModel(c));saveBlob(blob,excel.fileName(c.fd.employeeName))}
+  catch(error){alert(`無法產生 Excel：${error.message}`)}
+  finally{button.disabled=false;button.textContent=original}
+}
 async function downloadExcel(c){
   try{
     const res=await fetch('../templates/資遣通知書-現版.xlsx');if(!res.ok)throw Error('找不到 Excel 範本');const zip=await JSZip.loadAsync(await res.arrayBuffer());
@@ -230,6 +246,18 @@ function installAverageExcelUI(){
   button.dataset.involuntary='';
   button.textContent='下載 Excel';
   button.onclick=()=>{if(latest)downloadAverageExcel(latest,button)};
+  pdfButton.after(button);
+}
+
+function installNoticeExcelUI(){
+  const pdfButton=document.querySelector('[data-doc="notice"]');
+  if(!pdfButton||document.querySelector('[data-notice-excel]'))return;
+  const button=document.createElement('button');
+  button.type='button';
+  button.dataset.noticeExcel='';
+  button.dataset.involuntary='';
+  button.textContent='下載 Excel';
+  button.onclick=()=>{if(latest)downloadNoticeExcel(latest,button)};
   pdfButton.after(button);
 }
 
@@ -351,6 +379,7 @@ function clearPdfStatus(){clearTimeout(pdfStatusTimer);const status=document.que
 function fitDocumentPreview(){const preview=document.querySelector('#documentPreview'),dialog=document.querySelector('#documentDialog');if(!dialog.open)return;preview.style.setProperty('--preview-scale','1');const available=Math.max(280,dialog.clientWidth-24),paperWidth=preview.getBoundingClientRect().width,fit=Math.min(1,available/paperWidth),scale=previewZoomed&&innerWidth<=760?Math.min(1,Math.max(.72,fit)):fit;preview.style.setProperty('--preview-scale',String(scale));document.querySelector('#togglePreviewZoom').textContent=previewZoomed?'符合寬度':'放大閱讀';dialog.classList.toggle('preview-zoomed',previewZoomed)}
 installResignationApplicationUI();
 installAverageExcelUI();
+installNoticeExcelUI();
 document.querySelectorAll('[data-doc]').forEach(b=>b.onclick=()=>{if(!latest)return;clearPdfStatus();const type=b.dataset.doc;previewDocumentType=type;previewZoomed=false;const titles={notice:'資遣通知書',average:'平均工資計算明細',service:'離職證明單',involuntary:'非自願離職證明書',resignation:'離職申請書',combined:'合併文件'};const preview=document.querySelector('#documentPreview');preview.classList.toggle('combined-preview',type==='combined');document.querySelector('#dialogTitle').textContent=`${titles[type]}－下載 PDF`;preview.innerHTML=type==='combined'?combinedPdf(latest):type==='notice'?noticePdf(latest):type==='average'?averagePdf(latest):type==='service'?servicePdf(latest):type==='resignation'?resignationApplicationPdf(latest):involuntaryPdf(latest);document.querySelector('#documentDialog').showModal();requestAnimationFrame(fitDocumentPreview)});
 document.querySelector('#togglePreviewZoom').onclick=()=>{previewZoomed=!previewZoomed;fitDocumentPreview()};
 window.addEventListener('resize',fitDocumentPreview);
