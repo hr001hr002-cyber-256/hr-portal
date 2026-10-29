@@ -14,7 +14,7 @@
     fund: document.getElementById("showFund"),
     customDate: document.getElementById("customDate")
   };
-  const finalReserveMm = 70;
+  const signatureReserveTopMm = 198;
   let renderFrame = 0;
   let savedEditorRange = null;
   let activeTableCell = null;
@@ -121,20 +121,18 @@
     return state;
   }
 
-  function reserveLastPage(state) {
-    const body = state.page.querySelector(".document-body");
-    const content = state.container;
-    const reservePx = finalReserveMm * 96 / 25.4;
-    const finalCapacity = body.clientHeight - reservePx;
+  function placeSignatureAfterBody(state) {
+    const pageRect = state.page.getBoundingClientRect();
+    const contentBottomMm = state.container.lastElementChild
+      ? (state.container.lastElementChild.getBoundingClientRect().bottom - pageRect.top) * 25.4 / 96
+      : 0;
 
-    if (usedHeight(content) > finalCapacity && content.textContent.trim()) {
+    if (contentBottomMm >= signatureReserveTopMm && state.container.textContent.trim()) {
       state.page = makePage(true);
+      state.page.classList.add("announcement-page--signature-only");
       state.container = state.page.querySelector(".reason-content");
-      reserveLastPage(state);
-      return;
     }
 
-    body.style.bottom = `${29 + finalReserveMm}mm`;
     const closing = closingTemplate.content.firstElementChild.cloneNode(true);
     const date = closing.querySelector(".document-date");
     date.replaceChildren(...formatDate(selectedDate()).split("　").map(part => {
@@ -142,7 +140,8 @@
       span.textContent = part;
       return span;
     }));
-    body.after(closing);
+    state.page.classList.add("announcement-page--has-signature");
+    state.page.querySelector(".document-body").after(closing);
   }
 
   function selectedDate() {
@@ -161,7 +160,7 @@
   function render() {
     preview.replaceChildren();
     const state = paginateReason();
-    reserveLastPage(state);
+    placeSignatureAfterBody(state);
     const pages = Array.from(preview.children);
     pages.forEach((page, index) => page.querySelector(".page-number").textContent = `${index + 1}-${pages.length}`);
     document.getElementById("pageCount").textContent = `${pages.length} 頁`;
@@ -240,6 +239,67 @@
     indent.setAttributeNS(ns, "w:left", String(left));
     if (hanging) indent.setAttributeNS(ns, "w:hanging", String(hanging));
     properties.append(indent);
+  }
+
+  function setParagraphSpacing(xml, paragraph, options = {}) {
+    const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    let properties = Array.from(paragraph.children).find(node => node.localName === "pPr");
+    if (!properties) {
+      properties = xml.createElementNS(ns, "w:pPr");
+      paragraph.prepend(properties);
+    }
+    Array.from(properties.children).filter(node => node.localName === "spacing").forEach(node => node.remove());
+    const spacing = xml.createElementNS(ns, "w:spacing");
+    spacing.setAttributeNS(ns, "w:before", String(options.before ?? 0));
+    spacing.setAttributeNS(ns, "w:after", String(options.after ?? 125));
+    spacing.setAttributeNS(ns, "w:line", String(options.line ?? 560));
+    spacing.setAttributeNS(ns, "w:lineRule", options.lineRule || "exact");
+    properties.append(spacing);
+  }
+
+  function setParagraphAfter(paragraph, after) {
+    const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    const properties = Array.from(paragraph.children).find(node => node.localName === "pPr");
+    const spacing = properties && Array.from(properties.children).find(node => node.localName === "spacing");
+    if (spacing) spacing.setAttributeNS(ns, "w:after", String(after));
+  }
+
+  function setPageBreakBefore(xml, node) {
+    const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    if (node.localName === "tbl") return false;
+    let properties = Array.from(node.children).find(child => child.localName === "pPr");
+    if (!properties) {
+      properties = xml.createElementNS(ns, "w:pPr");
+      node.prepend(properties);
+    }
+    if (!Array.from(properties.children).some(child => child.localName === "pageBreakBefore")) {
+      properties.append(xml.createElementNS(ns, "w:pageBreakBefore"));
+    }
+    let spacing = Array.from(properties.children).find(child => child.localName === "spacing");
+    if (!spacing) {
+      spacing = xml.createElementNS(ns, "w:spacing");
+      properties.append(spacing);
+    }
+    // Keep continuation-page body text below the repeating Word header.
+    spacing.setAttributeNS(ns, "w:before", "510");
+    return true;
+  }
+
+  function keepParagraphsTogether(xml, paragraphs) {
+    const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    paragraphs.forEach((paragraph, index) => {
+      let properties = Array.from(paragraph.children).find(child => child.localName === "pPr");
+      if (!properties) {
+        properties = xml.createElementNS(ns, "w:pPr");
+        paragraph.prepend(properties);
+      }
+      if (!Array.from(properties.children).some(child => child.localName === "keepLines")) {
+        properties.append(xml.createElementNS(ns, "w:keepLines"));
+      }
+      if (index < paragraphs.length - 1 && !Array.from(properties.children).some(child => child.localName === "keepNext")) {
+        properties.append(xml.createElementNS(ns, "w:keepNext"));
+      }
+    });
   }
 
   function createNumberingManager(xml) {
@@ -408,7 +468,13 @@
     const paragraph = prototype.cloneNode(true);
     stripAutomaticNumbering(paragraph);
     Array.from(paragraph.children).forEach(child => { if (child.localName !== "pPr") child.remove(); });
-    setParagraphIndent(xml, paragraph, options.left ?? 680, options.hanging || 0);
+    setParagraphIndent(xml, paragraph, options.left ?? 0, options.hanging || 0);
+    setParagraphSpacing(xml, paragraph, {
+      before: options.before ?? 0,
+      after: options.after ?? 125,
+      line: options.line ?? 560,
+      lineRule: options.lineRule || "exact"
+    });
     const alignment = options.alignment || (htmlNode.style && htmlNode.style.textAlign);
     if (alignment) setParagraphAlignment(xml, paragraph, ({ start: "left", end: "right", justify: "both" })[alignment] || alignment);
     if (options.prefix) appendRichRun(xml, paragraph, options.prefix, { size: options.size || 28, bold: options.bold });
@@ -462,7 +528,7 @@
     return table;
   }
 
-  function makeReasonNodes(xml, prototype, numberingManager) {
+  function makeReasonNodes(xml, prototype, numberingManager, sourceRoot = fields.reason) {
     const result = [];
     const appendList = (list, level = 0) => {
       const ordered = list.tagName.toLowerCase() === "ol";
@@ -480,7 +546,8 @@
         Array.from(item.children).filter(child => ["ul", "ol"].includes(child.tagName.toLowerCase())).forEach(nested => appendList(nested, level + 1));
       });
     };
-    Array.from(fields.reason.childNodes).forEach(block => {
+    const sourceBlocks = Array.from(sourceRoot.childNodes);
+    sourceBlocks.forEach((block, blockIndex) => {
       if (block.nodeType === Node.TEXT_NODE) {
         block.textContent.replace(/\r/g, "").split("\n").forEach(line => {
           const paragraph = document.createElement("p"); paragraph.textContent = line || " ";
@@ -490,6 +557,12 @@
       }
       if (block.nodeType !== Node.ELEMENT_NODE) return;
       const tag = block.tagName.toLowerCase();
+      if (!block.textContent.trim() && !block.querySelector("table,img")) {
+        const hasFollowingContent = sourceBlocks.slice(blockIndex + 1).some(node => node.nodeType === Node.ELEMENT_NODE ? node.textContent.trim() || node.querySelector("table,img") : node.textContent.trim());
+        const previous = result[result.length - 1];
+        if (hasFollowingContent && previous && previous.localName === "p") setParagraphAfter(previous, 250);
+        return;
+      }
       if (tag === "table") { result.push(makeWordTable(xml, block, prototype)); return; }
       const nestedList = block.querySelector(":scope > ul, :scope > ol");
       if (nestedList) { appendList(nestedList, tag === "blockquote" ? 1 : 0); return; }
@@ -513,29 +586,108 @@
     return result.length ? result : [makeRichParagraph(xml, prototype, document.createElement("p"))];
   }
 
-  function makeSignaturePageSpacer(xml, prototype) {
+  function makePaginatedReasonNodes(xml, prototype, numberingManager) {
+    const pages = Array.from(preview.querySelectorAll(".announcement-page:not(.announcement-page--signature-only)"));
+    const result = [];
+    pages.forEach((page, pageIndex) => {
+      const nodes = makeReasonNodes(xml, prototype, numberingManager, page.querySelector(".reason-content"));
+      while (nodes.length > 1 && nodes[nodes.length - 1].localName === "p" && !paragraphText(nodes[nodes.length - 1]).trim()) {
+        nodes.pop();
+      }
+      if (pageIndex > 0 && nodes.length) {
+        if (!setPageBreakBefore(xml, nodes[0])) {
+          const marker = makeRichParagraph(xml, prototype, document.createElement("p"), { after: 0, line: 20 });
+          setPageBreakBefore(xml, marker);
+          result.push(marker);
+        }
+      }
+      result.push(...nodes);
+    });
+    return result;
+  }
+
+  function makeSignaturePageMarker(xml, prototype) {
     const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
-    const spacer = prototype.cloneNode(true);
-    stripAutomaticNumbering(spacer);
-    setParagraphText(xml, spacer, " ", { size: 28 });
-    let properties = Array.from(spacer.children).find(node => node.localName === "pPr");
+    const marker = prototype.cloneNode(true);
+    stripAutomaticNumbering(marker);
+    setParagraphText(xml, marker, " ", { size: 2 });
+    let properties = Array.from(marker.children).find(node => node.localName === "pPr");
     if (!properties) {
       properties = xml.createElementNS(ns, "w:pPr");
-      spacer.prepend(properties);
+      marker.prepend(properties);
     }
     Array.from(properties.children).filter(node => node.localName === "spacing").forEach(node => node.remove());
     properties.append(xml.createElementNS(ns, "w:pageBreakBefore"));
     const spacing = xml.createElementNS(ns, "w:spacing");
     spacing.setAttributeNS(ns, "w:before", "0");
     spacing.setAttributeNS(ns, "w:after", "0");
-    spacing.setAttributeNS(ns, "w:line", "9200");
+    spacing.setAttributeNS(ns, "w:line", "20");
     spacing.setAttributeNS(ns, "w:lineRule", "exact");
     properties.append(spacing);
-    return spacer;
+    return marker;
+  }
+
+  function makeFloatingSignatureTable(xml, paragraphs) {
+    const ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    const element = name => xml.createElementNS(ns, `w:${name}`);
+    const set = (node, name, value) => node.setAttributeNS(ns, `w:${name}`, String(value));
+    const table = element("tbl");
+    const properties = element("tblPr");
+    const position = element("tblpPr");
+    set(position, "leftFromText", 0);
+    set(position, "rightFromText", 0);
+    set(position, "topFromText", 0);
+    set(position, "bottomFromText", 0);
+    set(position, "vertAnchor", "page");
+    set(position, "horzAnchor", "margin");
+    set(position, "tblpX", 0);
+    set(position, "tblpY", Math.round(signatureReserveTopMm * 1440 / 25.4));
+    const width = element("tblW");
+    set(width, "w", 8840);
+    set(width, "type", "dxa");
+    const layout = element("tblLayout");
+    set(layout, "type", "fixed");
+    const borders = element("tblBorders");
+    ["top", "left", "bottom", "right", "insideH", "insideV"].forEach(side => {
+      const border = element(side);
+      set(border, "val", "nil");
+      borders.append(border);
+    });
+    properties.append(position, width, layout, borders);
+    table.append(properties);
+
+    const grid = element("tblGrid");
+    const column = element("gridCol");
+    set(column, "w", 8840);
+    grid.append(column);
+    table.append(grid);
+
+    const row = element("tr");
+    const rowProperties = element("trPr");
+    rowProperties.append(element("cantSplit"));
+    row.append(rowProperties);
+    const cell = element("tc");
+    const cellProperties = element("tcPr");
+    const cellWidth = element("tcW");
+    set(cellWidth, "w", 8840);
+    set(cellWidth, "type", "dxa");
+    const margins = element("tcMar");
+    ["top", "left", "bottom", "right"].forEach(side => {
+      const margin = element(side);
+      set(margin, "w", 0);
+      set(margin, "type", "dxa");
+      margins.append(margin);
+    });
+    cellProperties.append(cellWidth, margins);
+    cell.append(cellProperties, ...paragraphs);
+    row.append(cell);
+    table.append(row);
+    return table;
   }
 
   async function buildDocx() {
     const pageCount = preview.querySelectorAll(".announcement-page").length;
+    const signatureOwnPage = Boolean(preview.querySelector(".announcement-page--signature-only"));
     const longTemplate = pageCount > 1;
     const templatePath = longTemplate ? "templates/announcement-sb115035.docx" : "templates/announcement-sb115036.docx";
     const zip = await JSZip.loadAsync(await fetch(templatePath).then(response => response.arrayBuffer()));
@@ -553,7 +705,6 @@
     const prefix = originalParagraphs.slice(0, 6).map(node => node.cloneNode(true));
     const reasonPrototype = originalParagraphs[6].cloneNode(true);
     const suffix = originalParagraphs.slice(suffixStart).map(node => node.cloneNode(true));
-    const signatureLead = [];
 
     setParagraphText(documentXml, prefix[2], `公告字號：${value(fields.number)}`, { size: 20 });
     setParagraphAlignment(documentXml, prefix[2], "right");
@@ -561,7 +712,7 @@
     setParagraphText(documentXml, prefix[4], `主旨：${value(fields.subject)}`, { size: 32 });
     setParagraphText(documentXml, prefix[5], `事由：${value(fields.reasonLead)}`, { size: 32 });
 
-    const reasonParagraphs = makeReasonNodes(documentXml, reasonPrototype, numberingManager);
+    const reasonParagraphs = makePaginatedReasonNodes(documentXml, reasonPrototype, numberingManager);
 
     const dateText = formatDate(selectedDate());
     const signatureCompany = suffix.find(node => paragraphText(node) === "搜博科技股份有限公司");
@@ -574,6 +725,15 @@
       setParagraphAlignment(documentXml, signatureDate, "distribute");
     }
     const compactSuffix = longTemplate ? suffix : suffix.filter(node => paragraphText(node).trim() || node === signatureCompany || node === signatureLine || node === signatureDate);
+    const signatureCompanyIndex = compactSuffix.indexOf(signatureCompany);
+    const signatureLineIndex = compactSuffix.indexOf(signatureLine);
+    if (signatureCompanyIndex >= 0 && signatureLineIndex > signatureCompanyIndex) {
+      compactSuffix.slice(signatureCompanyIndex + 1, signatureLineIndex).forEach(paragraph => {
+        if (!paragraphText(paragraph).trim()) {
+          setParagraphSpacing(documentXml, paragraph, { before: 0, after: 0, line: 400, lineRule: "exact" });
+        }
+      });
+    }
     if (!longTemplate && signatureLine) {
       const properties = Array.from(signatureLine.children).find(node => node.localName === "pPr");
       if (properties) {
@@ -584,7 +744,9 @@
         properties.append(spacing);
       }
     }
-    body.replaceChildren(...prefix, ...reasonParagraphs, ...signatureLead, ...compactSuffix, sectionProperties);
+    const signatureTable = makeFloatingSignatureTable(documentXml, compactSuffix);
+    const signaturePageMarker = signatureOwnPage ? [makeSignaturePageMarker(documentXml, reasonPrototype)] : [];
+    body.replaceChildren(...prefix, ...reasonParagraphs, ...signaturePageMarker, signatureTable, sectionProperties);
     zip.file("word/document.xml", serializer.serializeToString(documentXml));
     zip.file("word/numbering.xml", serializer.serializeToString(numberingXml));
 
