@@ -10,6 +10,7 @@
   const textCell=(address,value,style=1)=>`<c r="${address}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${xml(value)}</t></is></c>`;
   const numberCell=(address,value,style=6)=>`<c r="${address}" s="${style}"><v>${Number.isFinite(Number(value))?Number(value):0}</v></c>`;
   const formulaCell=(address,formula,cachedValue,style=6)=>`<c r="${address}" s="${style}"><f>${xml(formula)}</f><v>${Number.isFinite(Number(cachedValue))?Number(cachedValue):0}</v></c>`;
+  const textFormulaCell=(address,formula,cachedValue,style=13)=>`<c r="${address}" s="${style}" t="str"><f>${xml(formula)}</f><v>${xml(cachedValue)}</v></c>`;
   const row=(index,cells,height=22)=>`<row r="${index}" ht="${height}" customHeight="1">${cells.join('')}</row>`;
   const columnsBetween=(start,end)=>Array.from({length:end.charCodeAt(0)-start.charCodeAt(0)+1},(_,index)=>String.fromCharCode(start.charCodeAt(0)+index));
   const mergedTextCells=(start,end,index,value,style=1)=>columnsBetween(start,end).map((column,offset)=>textCell(`${column}${index}`,offset?'':value,style));
@@ -44,12 +45,15 @@
     rows.push(row(totalRow,[...mergedTextCells('A','G',totalRow,'總應領工資',7),wages.length?formulaCell(`H${totalRow}`,`SUM(H${firstWageRow}:H${lastWageRow})`,model.totalNet,8):numberCell(`H${totalRow}`,model.totalNet,8)],24));
     rows.push(row(current++,[],9));
     const formulaRow=current++;
-    merges.push(`A${formulaRow}:F${formulaRow}`);
-    merges.push(`G${formulaRow}:H${formulaRow}`);
-    rows.push(row(formulaRow,[...mergedTextCells('A','F',formulaRow,'平均工資算式',9),...mergedTextCells('G','H',formulaRow,model.fullSix?'總應領工資 ÷ 6個月':'總應領工資 ÷ 計算日數 × 30',13)],34));
+    merges.push(`A${formulaRow}:B${formulaRow}`);
+    merges.push(`C${formulaRow}:H${formulaRow}`);
+    const formatNumber=value=>Math.round(Number(value)||0).toLocaleString('zh-TW');
+    const calculationText=model.fullSix?`${formatNumber(model.totalNet)} ÷ 6個月 ＝ ${formatNumber(model.averageWage)} 元`:`${formatNumber(model.totalNet)} ÷ ${model.tenureDays}日 × 30 ＝ ${formatNumber(model.averageWage)} 元`;
+    const calculationFormula=model.fullSix?`TEXT(H${totalRow},"#,##0")&" ÷ 6個月 ＝ "&TEXT(H${current},"#,##0")&" 元"`:`TEXT(H${totalRow},"#,##0")&" ÷ "&TEXT(F9,"0")&"日 × 30 ＝ "&TEXT(H${current},"#,##0")&" 元"`;
+    rows.push(row(formulaRow,[...mergedTextCells('A','B',formulaRow,'平均工資算式',9),textFormulaCell(`C${formulaRow}`,calculationFormula,calculationText),...columnsBetween('D','H').map(column=>textCell(`${column}${formulaRow}`,'',13))],34));
     const averageRow=current++;
     merges.push(`A${averageRow}:G${averageRow}`);
-    const averageFormula=model.fullSix?`H${totalRow}/6`:`H${totalRow}/F9*30`;
+    const averageFormula=model.fullSix?`H${totalRow}/6`:`ROUND(H${totalRow}/F9,2)*30`;
     rows.push(row(averageRow,[...mergedTextCells('A','G',averageRow,'平均工資',9),formulaCell(`H${averageRow}`,averageFormula,model.averageWage,10)],25));
     const severanceRow=current++;
     merges.push(`A${severanceRow}:G${severanceRow}`);

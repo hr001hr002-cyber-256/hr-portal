@@ -87,6 +87,12 @@ function newBasis(s,e){
   return{duration,basis:duration.years+partialYears};
 }
 function oldBasis(s,e){if(s>e)return{duration:{years:0,months:0,days:0,totalDays:0},basis:0};const d=diffYmd(s,e);return{duration:d,basis:d.years+Math.ceil(d.months+(d.days?1:0))/12}}
+function roundedDailyWage(total,dayCount){
+  const [mantissa,exponent='0']=String(total).toLowerCase().split('e'),[whole,fraction='']=mantissa.split('.');
+  let numerator=BigInt(whole+fraction),denominator=BigInt(dayCount),power=Number(exponent)-fraction.length+2;
+  if(power>=0)numerator*=10n**BigInt(power);else denominator*=10n**BigInt(-power);
+  return Number((numerator*2n+denominator)/(denominator*2n))/100;
+}
 function newSeveranceAmounts(monthly,newUnits,oldUnits){const newWage=Math.round(monthly),newRaw=newWage*newUnits,oldRaw=monthly*oldUnits,raw=newRaw+oldRaw;return{newWage,newRaw,oldRaw,raw,total:Math.ceil(raw)}}
 function tenureParts(s,e,system,transition){if(system==='new')return{newPart:newBasis(s,e),oldPart:oldBasis(e,plus(e,-1))};if(system==='old')return{newPart:newBasis(e,plus(e,-1)),oldPart:oldBasis(s,e)};if(!transition)throw Error('請填寫轉換新制日期');return{oldPart:oldBasis(s,plus(transition,-1)),newPart:newBasis(transition,e)}}
 function calculate(){
@@ -96,7 +102,7 @@ function calculate(){
   const sortedWages=[...wages].sort((a,b)=>periodValue(b.period)-periodValue(a.period)),averageWages=sortedWages.slice(0,6);
   const totalNet=averageWages.reduce((n,x)=>n+x.net,0);if(totalNet<=0)throw Error('總應領工資必須大於 0');
   const fullSix=tenure.totalDays>=180&&averageWages.length>=6;
-  const daily=totalNet/tenure.totalDays;
+  const daily=fullSix?totalNet/tenure.totalDays:roundedDailyWage(totalNet,tenure.totalDays);
   const monthly=+fd.averageWageOverride||(fullSix?totalNet/6:daily*30);
   const noticeApplies=/^labor-standard-act-(11|13)/.test(fd.legalBasis);
   const completedMonths=tenure.years*12+tenure.months+(tenure.days?tenure.days/31:0);

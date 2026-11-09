@@ -21,7 +21,7 @@ const model={companyName:'搜博科技股份有限公司',employeeName:'王小�
   const workbook=await zip.file('xl/workbook.xml').async('string');
   assert.equal(AverageExcel.fileName('王小明'),'王小明-平均工資計算明細.xlsx');
   assert.equal(AverageExcel.fileName(''),'平均工資計算明細.xlsx');
-  for(const text of ['王小明','民國107年07月03日','民國115年10月31日','3043日（8年3月29日）','115/05 ～ 115/10','總應領工資 ÷ 6個月'])assert.ok(sheet.includes(text),`找不到 ${text}`);
+  for(const text of ['王小明','民國107年07月03日','民國115年10月31日','3043日（8年3月29日）','115/05 ～ 115/10','449,682 ÷ 6個月 ＝ 74,947 元'])assert.ok(sheet.includes(text),`找不到 ${text}`);
   for(const value of [449682,74947,312176])assert.match(sheet,new RegExp(`<v>${value}<\\/v>`),`找不到數值 ${value}`);
   assert.equal((sheet.match(/<row r="1[2-7]"/g)||[]).length,6,'工資資料列應為 6 列');
   assert.doesNotMatch(sheet,/undefined|null/);
@@ -29,7 +29,11 @@ const model={companyName:'搜博科技股份有限公司',employeeName:'王小�
   assert.ok(sheet.includes('<f>SUM(H12:H17)</f>'),'總應領工資應使用 SUM 公式');
   assert.ok(sheet.includes('<f>H18/6</f>'),'平均工資應連動總額與六個月基準');
   const partialSheet=AverageExcel.buildSheet({...model,fullSix:false,wages:wages.slice(0,1),totalNet:74947,averageWage:74947*30/3043});
-  assert.ok(partialSheet.includes('<f>H13/F9*30</f>'),'未滿六個月平均工資應連動總額與正式日數基準');
+  assert.ok(partialSheet.includes('<f>ROUND(H13/F9,2)*30</f>'),'未滿六個月平均工資應先將日平均取至小數兩位');
+  const sampleSheet=AverageExcel.buildSheet({...model,fullSix:false,wages:[{...wages[0],original:38000,partialDeduction:13933,net:24067}],tenureDays:19,totalNet:24067,averageWage:38000});
+  assert.ok(sampleSheet.includes('24,067 ÷ 19日 × 30 ＝ 38,000 元'),'算式應顯示匯出當下的數字');
+  assert.match(sampleSheet,/<c r="C15" s="13" t="str"><f>TEXT\(H13,/,'算式文字應以公式連動總額');
+  assert.ok(sampleSheet.includes('TEXT(H16,'),'算式文字應連動平均工資儲存格');
   assert.match(sheet,/<c r="H22" s="10"><v>312176<\/v><\/c>/,'資遣費必須維持固定正式結果');
   assert.doesNotMatch(sheet,/<c r="H22"[^>]*><f>/,'資遣費不得使用 Excel 公式');
   assert.ok(sheet.includes('<printOptions horizontalCentered="1" verticalCentered="0" gridLines="0" headings="0"/>'),'列印內容應水平置中且不列印格線／標題');
@@ -40,5 +44,5 @@ const model={companyName:'搜博科技股份有限公司',employeeName:'王小�
   assert.match(sheet,/<c r="H23" s="10"><v>387123<\/v><\/c>/,'最終應支付金額應直接使用匯出當下正式結果');
   assert.ok(workbook.includes('<definedName name="_xlnm.Print_Area" localSheetId="0">\'平均工資計算明細\'!$A$1:$H$31</definedName>'),'列印範圍應固定為單頁內容');
   assert.ok(buffer.length>5000,'XLSX 檔案大小異常');
-  console.log(`PASS 25/25\nOUTPUT ${outputPath}`);
+  console.log(`PASS 平均工資 Excel 檢查\nOUTPUT ${outputPath}`);
 })().catch(error=>{console.error(error);process.exitCode=1});
